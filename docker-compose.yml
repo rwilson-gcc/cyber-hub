@@ -1,0 +1,24 @@
+services:
+  hub:
+    build: .
+    image: gcc-cyber-hub:latest
+    container_name: gcc-cyber-hub
+    restart: unless-stopped
+    ports:
+      - "8080:8000"            # change the left-hand number to publish on a different host port
+    environment:
+      # Optional: set a long random value to enable GET /api/admin/export.csv for staff.
+      ADMIN_TOKEN: "${ADMIN_TOKEN:-}"
+      # Only trust X-Forwarded-For from your reverse proxy (needed for correct per-IP rate limits).
+      # Example: FORWARDED_ALLOW_IPS=172.18.0.0/16 or the proxy's IP. Leave as-is if not proxied.
+      FORWARDED_ALLOW_IPS: "${FORWARDED_ALLOW_IPS:-127.0.0.1}"
+    volumes:
+      - hub-data:/data         # SQLite database with learner IDs and progress
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  hub-data:

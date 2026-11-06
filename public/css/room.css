@@ -1,0 +1,31 @@
+/* Rules shared by every challenge room (rooms/*.html) */
+h3{font-size:1.25rem;margin:1.4em 0 .4em;line-height:1.25}
+.wrap{max-width:900px;margin:0 auto;padding:0 1.25rem}
+.hero p{max-width:34em;font-size:1.2rem}
+nav{background:var(--char);position:sticky;top:0;z-index:5}
+nav ul{list-style:none;margin:0;padding:.5rem 1.25rem;display:flex;gap:.25rem 1rem;flex-wrap:wrap;max-width:900px;margin:auto}
+section h2{font-size:clamp(2rem,6vw,3.2rem)}
+.card.mint{background:var(--mint)}.card.yellow{background:var(--yellow)}
+ul.tick{padding-left:1.2rem}
+ul.tick li{margin:.4rem 0}
+code,pre{font-family:ui-monospace,Consolas,Menlo,monospace}
+code{background:#eadccf;padding:.1em .35em;border-radius:4px;font-size:.92em}
+pre{background:var(--char);color:var(--van);padding:1rem;border-radius:10px;overflow-x:auto;font-size:.9rem;line-height:1.5;margin:.6rem 0;white-space:pre-wrap;word-break:break-word}
+button{font:inherit;font-weight:700;cursor:pointer;border:2px solid var(--char);border-radius:999px;padding:.55rem 1.2rem;background:var(--char);color:var(--van)}
+button:hover{background:var(--blue)}
+button.alt{background:var(--yellow);color:var(--char)}button.alt:hover{background:var(--pink)}
+button:disabled{opacity:.55;cursor:not-allowed}
+label{font-weight:700;display:block;margin-bottom:.3rem}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.fb{margin-top:.7rem;padding:.6rem .9rem;border-radius:10px;border:2px solid var(--char);font-weight:700;display:none}
+.fb.ok{display:block;background:var(--mint)}.fb.no{display:block;background:var(--coral)}.fb.info{display:block;background:var(--yellow)}
+.browser{border:2px solid var(--char);border-radius:12px;overflow:hidden;background:#fff;margin:1rem 0}
+.bar-wrap{height:16px;border:2px solid var(--char);border-radius:99px;background:#fff;overflow:hidden}
+#bar{height:100%;width:0;background:var(--pink);transition:width .4s}
+fieldset{border:2px solid var(--char);border-radius:12px;margin:.8rem 0;padding:.6rem 1rem}
+legend{font-weight:700;padding:0 .4rem}
+fieldset label{font-weight:400;margin:.3rem 0}
+textarea{font:inherit;width:100%;min-height:80px;border:2px solid var(--char);border-radius:10px;padding:.6rem;background:#fff;color:var(--char)}
+details{margin:.5rem 0}summary{cursor:pointer;font-weight:700}
+.hint{background:var(--yellow);border:2px solid var(--char);border-radius:10px;padding:.6rem .9rem;margin:.5rem 0}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}#bar{transition:none}}

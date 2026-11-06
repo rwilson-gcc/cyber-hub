@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL Injection: when input becomes instruction | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/sql-injection.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="sql-injection">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>SQL injection: when input becomes instruction</h1>
+    <p>A website asks a database questions on your behalf. This room shows what happens when the site pastes your words straight into the question, and why that lets you change the question itself. Everything here is a simulation: no real database is involved.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Most websites keep their information in a database, and they talk to it using a language called SQL. When you search for a product or log in, the site writes a short SQL question, sends it to the database, and shows you the answer.</p>
+  <h3>Why does it matter?</h3>
+  <p>If the site builds that question by gluing your text into it, then your text can include SQL of its own. The database can't tell which words the developer wrote and which words you typed, so it follows all of them. That single mistake can expose accounts, customer records and anything else the database holds.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>SQL injection has been well understood for over twenty years, yet it still turns up in real breaches because one careless line of code is enough to cause it. It sits in the injection category of the most commonly reported web vulnerabilities.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine a form at a bank that says "Pay to the order of ______". A clerk reads out whatever you write. If you write "Alice. Also, empty the safe.", a careless clerk might treat the second sentence as an instruction rather than a name. SQL injection is the same mix-up between information and instructions.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test for SQL injection on systems you own or have written permission to test. Sending these inputs to a real site without authorisation is a criminal offence under the Computer Misuse Act 1990, even if you only meant to look. This room is a complete simulation.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain how a site builds a SQL query from user input, and where that goes wrong.</li>
+    <li>Recognise the three building blocks of a basic injection: a closing quote, a comment and an always-true condition.</li>
+    <li>Use a verbose database error to learn about a site's query.</li>
+    <li>Use <code>ORDER BY</code> and <code>UNION</code> to find a query's column count and read a table the page never meant to show.</li>
+    <li>Describe the real fix: parameterised queries, alongside quieter errors and least privilege.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+
+  <h3>Idea 1: the site writes a question, and your text goes inside it</h3>
+  <p>Here is what a vulnerable search page does with whatever you type. The part in yellow is you. Everything else was written by the developer.</p>
+  <pre>SELECT name, price FROM products WHERE name LIKE '%<span class="inj">bike</span>%'</pre>
+  <p>Typing <code>bike</code> gives the database a tidy question. The quote marks around your text tell the database "this part is just text". Everything depends on those quotes staying where the developer put them.</p>
+  <ol class="flow" aria-label="Life of a search">
+    <li><b>1. You type</b>Words into a search box or login form.</li>
+    <li><b>2. Site builds SQL</b>It pastes your words into a query string.</li>
+    <li><b>3. Database runs it</b>It follows every instruction it finds.</li>
+    <li><b>4. Results come back</b>Shown on the page, or as an error.</li>
+  </ol>
+
+  <h3>Idea 2: breaking out of the quotes</h3>
+  <p>If you type your own quote mark, it closes the text early, and whatever comes next is read as SQL. Three small pieces cover most beginner attacks:</p>
+  <div class="cols">
+    <div class="h1"><b>A quote: <code>'</code></b><p style="margin:.3rem 0 0">Ends the text early so you can write SQL after it. On its own it usually causes an error, which is itself a clue.</p></div>
+    <div class="v1"><b>A comment: <code>--</code></b><p style="margin:.3rem 0 0">Tells the database to ignore the rest of the line, including the developer's own closing quote or password check.</p></div>
+    <div class="h1"><b>A true condition: <code>OR 1=1</code></b><p style="margin:.3rem 0 0">Always true, so a <code>WHERE</code> filter matches every row instead of only the ones the developer intended.</p></div>
+  </div>
+  <pre>-- login query the developer wrote:
+SELECT username FROM staff WHERE username = '<span class="inj">admin'--</span>' AND password = ''
+-- everything after the dashes is ignored, so the password check never runs</pre>
+  <fieldset>
+    <legend>Mini quiz: why the error?</legend>
+    <p>A learner types a single quote <code>'</code> into a vulnerable search box and the page shows a database error. What is the most likely reason?</p>
+    <label><input type="radio" name="q1" value="a"> The quote closed the text early, leaving broken SQL behind it</label>
+    <label><input type="radio" name="q1" value="b"> Quote marks are banned in search boxes</label>
+    <label><input type="radio" name="q1" value="c"> The database server was switched off</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: counting columns and joining tables</h3>
+  <p>A search query returns a fixed number of columns. <code>ORDER BY 3</code> sorts by the third column, so it works if there are at least three and fails if there aren't. Trying 1, 2, 3, 4 reveals the exact count. Once you know it, <code>UNION SELECT</code> lets you glue the results of a completely different query onto the page's own results, as long as it has the same number of columns.</p>
+  <pre>' ORDER BY 4--     → error means fewer than 4 columns
+' UNION SELECT a, b, c FROM other_table--</pre>
+
+  <h3>Idea 4: the fix is to keep code and data apart</h3>
+  <p>The proper defence is a <b>parameterised query</b> (also called a prepared statement). The developer sends the SQL and the user's text to the database separately, so the text can only ever be treated as text, however many quotes it contains. Hiding error messages, limiting what the database account can read, and hashing stored passwords all help, but none of them replaces this fix.</p>
+  <pre>query = "SELECT name, price FROM products WHERE name LIKE ?"
+run(query, ["%" + <span class="inj">user_text</span> + "%"])   <span class="c">-- the ? is filled in as data only</span></pre>
+  <fieldset>
+    <legend>Mini quiz: the real fix</legend>
+    <p>Which of these separates the user's text from the SQL so that injection can't change the query?</p>
+    <label><input type="radio" name="q2" value="a"> Parameterised queries (prepared statements)</label>
+    <label><input type="radio" name="q2" value="b"> Hiding the database error from visitors</label>
+    <label><input type="radio" name="q2" value="c"> Blocking inputs that contain the word SELECT</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>glenmuir-garden-centre.example</code>, a plant shop with a search box:</p>
+  <div class="card">
+    <p>A normal search for <code>fern</code> builds this query and returns two plants:</p>
+    <pre>SELECT name, price FROM plants WHERE name LIKE '%fern%'</pre>
+    <p>A tester then types <code>' OR 1=1-- </code> into the same box:</p>
+    <pre>SELECT name, price FROM plants WHERE name LIKE '%' OR 1=1-- %'</pre>
+    <p>The quote closed the text, <code>OR 1=1</code> made the filter always true, and <code>--</code> threw away the leftover <code>%'</code>. The page now lists every plant in the table, including ones that were marked as hidden. The tester didn't need a password, a tool or any special access, only a different way of typing into a box.</p>
+    <p>The fix on the garden centre's side is a one-line change to a parameterised query. The vulnerable line and the safe line look almost identical, which is exactly why this bug survives code reviews.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is <code>kelvin-cycles.example</code>, a bike shop with a product search and a staff login. Both pages build their database queries by pasting your text in, and the panel under the site shows you exactly what the server ran. All tasks use the two forms below.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated website">
+    <div class="bar">
+      <span aria-hidden="true">kelvin-cycles.example</span>
+      <span id="site-state">Staff: not logged in</span>
+    </div>
+    <div class="screen" aria-label="Page content">
+      <div class="site-grid">
+        <div class="site-panel wide">
+          <h3>Search the shop</h3>
+          <form id="search-form" aria-label="Product search">
+            <label for="q">Search products</label>
+            <div class="row"><input type="text" id="q" autocomplete="off" spellcheck="false" placeholder="e.g. lock"><button type="submit" class="alt">Search</button></div>
+          </form>
+          <div id="search-out" aria-live="polite"></div>
+        </div>
+        <div class="site-panel">
+          <h3>Staff login</h3>
+          <form id="login-form" aria-label="Staff login">
+            <label for="user">Username</label>
+            <input type="text" id="user" autocomplete="off" spellcheck="false">
+            <label for="pass" style="margin-top:.5rem">Password</label>
+            <input type="password" id="pass" autocomplete="off">
+            <p style="margin:.7rem 0 0"><button type="submit" class="alt">Log in</button></p>
+          </form>
+          <div id="login-out" aria-live="polite"></div>
+          <div id="dashboard"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" aria-label="What the server ran">
+    <h3 style="margin-top:0">What the server just ran</h3>
+    <p style="margin:.2rem 0 0">Your input is highlighted. Everything else was written by the developer.</p>
+    <pre id="sql-out" aria-live="polite">Run a search or a login above to see the query here.</pre>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: break the search (easy)</h3>
+    <p>Type a single quote <code>'</code> into the product search and press Search. The page shows a database error with debug information. Which table is the search reading from?</p>
+    <div class="row"><label for="a1" style="margin:0">Table name</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: bypass the login (easy–medium)</h3>
+    <p>In the staff login, close the username's quote and comment out the rest of the query so the password is never checked. You don't know any password. Which account do you end up logged in as?</p>
+    <div class="row"><label for="a2" style="margin:0">Account name</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: count the columns (medium)</h3>
+    <p>Back in the product search, use <code>ORDER BY</code> with a column number. Increase the number until the page returns an error. How many columns does the search query return?</p>
+    <div class="row"><label for="a3" style="margin:0">Number of columns</label><input type="text" id="a3" autocomplete="off"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: read a table the page never shows (harder)</h3>
+    <p>The staff dashboard lists the tables in the database. One of them holds an internal note with a Base64-encoded value. Use a <code>UNION SELECT</code> in the product search, with the right number of columns, to display that note. Decode the value below to reveal your flag.</p>
+    <label for="dec-in">Paste text to decode</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out" aria-live="polite">Output appears here.</pre>
+    <div class="row" style="margin-top:.6rem"><label for="a4" style="margin:0">Confirm: which SQL keyword joined the extra results onto the search results?</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you decoded. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Why does a single quote cause an error, and what useful information did the error give you?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>The quote closes the text early, so the leftover characters are invalid SQL. The debug output then revealed the query's shape and the table name, which is exactly the groundwork an attacker needs for the next step.</p></details></div>
+  <div class="card"><label for="r2">2. Why isn't "block the word SELECT" or "remove quote marks" a reliable defence?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>Filters try to spot bad input, and attackers keep finding new ways to write it (different cases, comments, encodings). Real names like O'Brien also contain quotes. Parameterised queries avoid the whole guessing game by never mixing input into the SQL.</p></details></div>
+  <div class="card"><label for="r3">3. In one sentence, explain how a parameterised query stops injection.</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>The SQL and the user's text are sent to the database separately, so the text is only ever treated as a value and can never be read as part of the instruction.</p></details></div>
+  <div class="card"><label for="r4">4. Why is showing full database errors to visitors a problem, even if the query itself were safe?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Verbose errors leak table names, query structure and software details. They belong in private logs for developers, with a plain "something went wrong" message shown to visitors. This links back to the information-leaking headers you found earlier.</p></details></div>
+  <div class="card"><label for="r5">5. The login bypass needed no password. Name two other weaknesses that would make this kind of breach worse, and a fix for each.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: a database account with far more access than the site needs (fix: least privilege), passwords stored in readable form (fix: salted hashing), no second factor on staff accounts (fix: MFA), and verbose errors (fix: log privately).</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>SQL injection happens when user input is pasted into a query, so the database can't tell data from instructions.</li>
+    <li>A quote, a comment and an always-true condition are the building blocks of the simplest attacks.</li>
+    <li>Verbose errors and a visible column count help an attacker move from guessing to reading other tables.</li>
+    <li>Filtering bad words is fragile. Parameterised queries are the fix that actually removes the problem.</li>
+    <li>Least privilege, hashed passwords and quiet error pages limit the damage if something is missed.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> That completes Path 1: recon, headers, cookies, login enumeration, access control and SQL injection. Path 2 starts with <a href="encoding-basics.html">Encoding: Base64, hex and friends</a>. Head back to the <a href="../index.html">hub</a> to tick this room off.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/sql-injection-engine.js"></script>
+<script src="../js/rooms/sql-injection.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

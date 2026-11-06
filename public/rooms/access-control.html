@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access Control: who's allowed to see what | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/access-control.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="access-control">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Access control: who's allowed to see what</h1>
+    <p>Logging in answers "who are you?" Access control answers the much more important question: "what should you be allowed to do, now that we know?" This room is about what happens when that second question never gets asked.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Authentication checks who you are, usually with a username and password. Access control is a separate, later check: now that we know who you are, what are you actually allowed to see or do? A huge number of real vulnerabilities come from sites that nail the first check and completely forget the second.</p>
+  <h3>Why does it matter?</h3>
+  <p>If access control is missing or incomplete, logging in as anyone, even a brand-new free account, can be enough to reach data or pages that should be locked away. No password cracking required, just a bit of curiosity about URLs and IDs.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Broken access control is consistently one of the most reported categories of real-world web vulnerabilities, because it's so easy to introduce (one missing check) and so easy to find (just change a number) once you know to look.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Picture a block of storage units. Everyone gets a key that opens their own unit. Access control failures are like discovering that key also opens unit 47, two doors down, which happens to belong to someone else &mdash; or that the "Staff Only" door at the end of the corridor was never actually locked at all.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test access control on systems you own or have permission to test. Viewing someone else's real data without authorisation is a criminal offence, even if the flaw was trivial to find. This room is a complete simulation.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain the difference between authentication and access control.</li>
+    <li>Define horizontal and vertical privilege escalation, and tell them apart.</li>
+    <li>Explain what an IDOR (insecure direct object reference) is.</li>
+    <li>Explain why hiding a link in the interface isn't the same as blocking the page.</li>
+    <li>Combine two access control weaknesses to reach a hidden flag.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+
+  <h3>Idea 1: two directions of privilege escalation</h3>
+  <div class="cols">
+    <div class="h1"><b>Horizontal</b><p style="margin:.3rem 0 0">Same level of access, but reaching someone else's data. A regular user viewing another regular user's private records.</p></div>
+    <div class="v1"><b>Vertical</b><p style="margin:.3rem 0 0">Climbing up a level. A regular user reaching admin-only pages or actions.</p></div>
+  </div>
+  <fieldset>
+    <legend>Mini quiz: horizontal or vertical?</legend>
+    <p>A logged-in customer changes an order number in the URL and sees a stranger's order. Which type of privilege escalation is this?</p>
+    <label><input type="radio" name="q1" value="a"> Horizontal</label>
+    <label><input type="radio" name="q1" value="b"> Vertical</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 2: IDOR, insecure direct object reference</h3>
+  <p>Many pages use an ID straight from the URL to decide what to show you, like <code>/invoices/1189</code>. That's fine, as long as the server also checks the invoice actually belongs to you. An IDOR happens when that ownership check is missing, so simply changing the number shows someone else's data.</p>
+  <pre>GET /invoices/1189   → your invoice, fine
+GET /invoices/1188   → <span style="color:var(--coral)">should be blocked, but isn't</span></pre>
+
+  <h3>Idea 3: a hidden link is not a locked door</h3>
+  <p>Developers often hide admin links from regular users in the page's design. That's a usability choice, not a security control. If the server doesn't separately check the user's role before showing the admin page, typing the URL directly, known as forced browsing, gets you straight in. This is sometimes called a missing function-level access control.</p>
+  <ol class="flow" aria-label="Where the check should happen">
+    <li><b>1. Hide the link</b>Fine for tidiness, but not a defence on its own.</li>
+    <li><b>2. User requests page</b>By clicking, or by typing the URL directly.</li>
+    <li><b>3. Server must check</b>Is this user actually allowed to see this page?</li>
+    <li><b>4. Allow or refuse</b>The check has to happen here, every time, no exceptions.</li>
+  </ol>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>brightpath-learning.example</code>, an online course platform:</p>
+  <div class="card">
+    <p>Logged in as a student, visiting <code>/invoices/1190</code> shows your own invoice. Out of curiosity, you try <code>/invoices/1189</code>:</p>
+    <pre>GET /invoices/1189  → 200 OK
+Name: J. Okafor
+Course: Advanced Spreadsheets
+Amount paid: £129.00</pre>
+    <p>That's someone else's invoice, shown with no ownership check at all. This is horizontal privilege escalation via an IDOR.</p>
+    <p>Separately, the student notices a link that isn't shown in their menu, but has seen mentioned in a staff training doc: <code>/admin/reports</code>. They try it directly:</p>
+    <pre>GET /admin/reports  → 200 OK
+(Full list of every course's enrolment and revenue figures)</pre>
+    <p>No login as staff was needed, just the URL. That's vertical privilege escalation, and specifically a missing function-level access control. The fix for both: check, on the server, that the logged-in user actually owns the resource or holds the right role, every single time, not just in the menu design.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is <code>lochview-library.example</code>, a library membership portal. Log in as a regular member, then use the simulated browser to explore. Your own account page is <code>/account/2048</code>.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated browser">
+    <div class="bar">
+      <button type="button" id="login-btn">Log in as member (ID 2048)</button>
+      <span id="login-state">Not logged in</span>
+    </div>
+    <form class="bar" id="nav-form" aria-label="Simulated address bar">
+      <span aria-hidden="true">lochview-library.example</span>
+      <label for="path" style="position:absolute;left:-999px">Path</label>
+      <input type="text" id="path" value="/account/2048" autocomplete="off" spellcheck="false" style="max-width:220px">
+      <button type="submit">Go</button>
+    </form>
+    <div class="screen" id="screen" aria-live="polite" tabindex="0" aria-label="Page content"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: find the neighbour (easy)</h3>
+    <p>Log in, then try changing the number in your account URL to a nearby ID. Which ID shows somebody else's private loan history?</p>
+    <div class="row"><label for="a1" style="margin:0">Account ID</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: name the flaw (easy–medium)</h3>
+    <p>What's this specific weakness called, where changing an ID in the URL reveals someone else's data with no ownership check?</p>
+    <div class="row"><label for="a2" style="margin:0">Name of the flaw</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: try forced browsing (medium)</h3>
+    <p>Still logged in as a regular member, visit <code>/admin/dashboard</code> directly. What happens?</p>
+    <fieldset>
+      <legend>Choose the best answer</legend>
+      <label><input type="radio" name="t3" value="a"> It loads anyway — the server never checked your role</label>
+      <label><input type="radio" name="t3" value="b"> Access denied, as expected</label>
+      <label><input type="radio" name="t3" value="c"> The page doesn't exist</label>
+    </fieldset>
+    <button type="button" data-task="3">Check answer</button>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: decode the admin note (harder)</h3>
+    <p>The admin dashboard holds a Base64-encoded note. Decode it below to reveal your flag.</p>
+    <label for="dec-in">Paste text to decode</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out" aria-live="polite">Output appears here.</pre>
+    <div class="row" style="margin-top:.6rem"><label for="a4" style="margin:0">Confirm: which page showed the note?</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you decoded. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Why is "the link isn't shown in the menu" not an acceptable security defence on its own?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Hiding a link only stops casual browsing through the interface. Anyone who guesses, remembers or is told the URL can still request the page directly, so the real check has to happen on the server.</p></details></div>
+  <div class="card"><label for="r2">2. Why can an IDOR be serious even though logging in only required a normal, low-privilege account?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>The barrier to entry is tiny: anyone with any account, even a free one, can try changing IDs. No special access or technical skill is needed, which is exactly why it's found so often.</p></details></div>
+  <div class="card"><label for="r3">3. What's one simple server-side rule that would have prevented both weaknesses in this room?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Always check, server-side, that the logged-in user owns the specific record they're asking for, and holds the specific role a page requires, on every single request.</p></details></div>
+  <div class="card"><label for="r4">4. How is forced browsing into an admin page similar to the directory listing you found in the recon room?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Both rely on a page existing and being reachable with the right path, even though nothing on the site pointed a normal visitor towards it. Obscurity isn't protection in either case.</p></details></div>
+  <div class="card"><label for="r5">5. If you were reporting this to the library's developers, how would you explain horizontal versus vertical privilege escalation in one sentence each, without jargon?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Horizontal: a user can see someone else's stuff at the same level as them. Vertical: a user can reach pages meant for a higher level of access than they actually have.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Authentication checks who you are; access control checks what you're allowed to do. Both are needed.</li>
+    <li>Horizontal escalation reaches another user's data at the same level; vertical escalation reaches a higher level entirely.</li>
+    <li>An IDOR is usually just a missing ownership check behind an ID in a URL.</li>
+    <li>Hiding a link from the menu is a design choice, not a security boundary.</li>
+    <li>Every access decision needs to be enforced on the server, on every request.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> You've now covered recon, headers, cookies, login enumeration and access control &mdash; a solid beginner path. Head to <a href="sql-injection.html">Room 6: SQL injection</a> next to see what happens when user input is trusted a little too much.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/access-control.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

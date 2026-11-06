@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recon 101: follow the breadcrumbs | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/recon-101.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="recon-101">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Recon 101: follow the breadcrumbs</h1>
+    <p>Every website leaves a trail. In this room, you’ll learn how to spot it, follow it and find a hidden flag, all inside a safe simulation. Ready to start?</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Reconnaissance (recon for short) means gathering information about a target before you do anything else. In web security, it’s the first step for ethical hackers, penetration testers and, unfortunately, attackers too.</p>
+  <h3>Why does it matter?</h3>
+  <p>Because most breaches don’t begin with clever tricks. They begin with something simple that someone left lying around: a forgotten comment, an old backup, a page that was meant to stay private. If you can find it in five minutes, so can anyone else.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Security teams run recon on their own websites to find leaks before attackers do. Bug bounty hunters get paid for reporting exactly this kind of exposure. Some serious breaches have started with a publicly reachable backup file nobody remembered existed.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine walking past a shop after closing time. You haven’t touched the door, but you can still read the opening hours, see the staff rota taped inside the window and spot a key hidden under a plant pot. Web recon works the same way: you look at what’s already visible, and you notice what shouldn’t be.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test systems you own or have written permission to test. In the UK, accessing a computer system without authorisation is a criminal offence under the Computer Misuse Act 1990. Everything in this room is a simulation, so you’re completely safe here.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <p>By the end of this room, you’ll be able to:</p>
+  <ul class="tick">
+    <li>Explain what reconnaissance is and why defenders care about it.</li>
+    <li>Read a page’s source code and spot comments that reveal too much.</li>
+    <li>Explain what <code>robots.txt</code> does, and why it isn’t a security control.</li>
+    <li>Recognise an exposed directory listing.</li>
+    <li>Tell the difference between encoding and encryption, and decode Base64.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <p>We’ll build up one idea at a time. Here’s the path you’ll follow in the challenge.</p>
+  <ol class="flow" aria-label="Recon path">
+    <li><b>1. Look</b>Read what the page shows and what its source code says.</li>
+    <li><b>2. Check the signs</b>Visit well-known files such as <code>robots.txt</code>.</li>
+    <li><b>3. Explore</b>Follow paths the site gives away.</li>
+    <li><b>4. Decode</b>Make sense of any odd-looking text.</li>
+  </ol>
+
+  <h3>Idea 1: the page you see isn’t the whole page</h3>
+  <p>Your browser turns HTML into the pretty page you see. The original HTML is still there, and anyone can read it (right-click, then “View page source”). Developers sometimes leave notes to themselves inside HTML comments. Comments look like this:</p>
+  <pre><span class="c">&lt;!-- this text never appears on screen, but it's in the source --&gt;</span></pre>
+  <p>Comments are invisible on the page, but they aren’t secret. That’s a very common mix-up.</p>
+
+  <h3>Idea 2: robots.txt is a polite sign, not a locked door</h3>
+  <p>Search engines crawl websites. A file called <code>robots.txt</code>, always found at the top of the site, asks them to skip certain folders. Well-behaved crawlers obey. But the file is public, so it also hands a map of “interesting” folders to anyone who reads it.</p>
+  <div class="building" role="group" aria-label="Building analogy for a website">
+    <div class="pub"><b>Public pages</b><br>The shop window. Anyone can look.</div>
+    <div class="sign"><b>robots.txt</b><br>A “please don’t go in” sign on the staff door.</div>
+    <div class="back"><b>Hidden folders</b><br>The staff room. Only protected if there’s an actual lock.</div>
+  </div>
+
+  <h3>Idea 3: directory listings</h3>
+  <p>If a server isn’t configured properly, visiting a folder with no home page can show a list of every file inside it. That’s called a directory listing, and it’s a classic misconfiguration. Think of it as leaving the filing cabinet open with an index on top.</p>
+
+  <h3>Idea 4: encoding is not encryption</h3>
+  <p>Base64 turns data into letters and numbers so it travels safely through systems that only expect text. It’s like writing a message in a different alphabet: anyone who knows the alphabet can read it, and no key is needed. Encryption, by contrast, needs a secret key to reverse.</p>
+  <pre>Plain text:  Hello
+Base64:      SGVsbG8=</pre>
+  <fieldset>
+    <legend>Mini quiz: encoding or encryption?</legend>
+    <p id="q-enc">Someone hides a password as Base64 and says, “Nobody will read it.” What’s the best response?</p>
+    <label><input type="radio" name="enc" value="a"> It’s safe, because Base64 is a type of encryption.</label>
+    <label><input type="radio" name="enc" value="b"> It isn’t safe, because anyone can decode Base64 without a key.</label>
+    <label><input type="radio" name="enc" value="c"> It’s safe, because Base64 looks random.</label>
+    <button type="button" class="alt" id="enc-btn">Check answer</button>
+    <div class="fb" id="enc-fb" role="status"></div>
+  </fieldset>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Let’s walk through a worked example on a different, made-up site, so you can see the method before you try it yourself. Imagine <code>pagesandpens.example</code>, a small online bookshop.</p>
+  <div class="card">
+    <h3 style="margin-top:0">Step 1: read the source</h3>
+    <pre>&lt;body&gt;
+  &lt;h1&gt;Pages &amp; Pens&lt;/h1&gt;
+  <span class="c">&lt;!-- TODO: delete the /test-orders/ folder after launch --&gt;</span>
+&lt;/body&gt;</pre>
+    <p>The comment names a folder, <code>/test-orders/</code>. Nobody linked to it on the page, but now we know it exists.</p>
+    <h3>Step 2: check robots.txt</h3>
+    <pre>User-agent: *
+<span class="k">Disallow: /test-orders/</span>
+<span class="k">Disallow: /staff-rota/</span></pre>
+    <p>This confirms the folder exists and reveals a second one, <code>/staff-rota/</code>. Ask yourself: if the owner wanted these hidden, why list them in a public file?</p>
+    <h3>Step 3: note it and report it</h3>
+    <p>An ethical hacker stops here, writes down what they found and tells the owner. The fix is simple: remove the comment, delete the test folder and protect anything private with a login. Recon found the problem without breaking anything.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is <code>clydeside-cafe.example</code>, a fictional café site built just for this room. Use the simulated browser to explore. Type a path into the address bar (for example <code>/</code>) and press Go, or use View source to read the page’s code. Four tasks take you from easy to tricky.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated browser">
+    <form class="bar" id="nav-form" aria-label="Simulated address bar">
+      <span aria-hidden="true">clydeside-cafe.example</span>
+      <label for="path" class="sr" style="position:absolute;left:-999px">Path</label>
+      <input type="text" id="path" value="/" autocomplete="off" spellcheck="false" style="max-width:260px">
+      <button type="submit">Go</button>
+      <button type="button" id="src-btn" aria-pressed="false">View source</button>
+    </form>
+    <div class="screen" id="screen" aria-live="polite" tabindex="0" aria-label="Page content"></div>
+  </div>
+
+  <div class="card task">
+    <h3>Task 1: read the source (easy)</h3>
+    <p>Open the café’s home page, then choose View source. A developer left a note about a folder they’re worried about. Which folder is it? (Type the folder name only.)</p>
+    <div class="row"><label for="a1" style="margin:0">Folder name</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card task">
+    <h3>Task 2: check the sign (medium)</h3>
+    <p>Visit <code>/robots.txt</code>. One folder is listed that the source code never mentioned. What’s its name?</p>
+    <div class="row"><label for="a2" style="margin:0">Folder name</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card task">
+    <h3>Task 3: explore (medium)</h3>
+    <p>Visit the folder you found in Task 2. What do you see, and what kind of misconfiguration is it? Pick one.</p>
+    <fieldset>
+      <legend>Misconfiguration type</legend>
+      <label><input type="radio" name="t3" value="a"> SQL injection</label>
+      <label><input type="radio" name="t3" value="b"> Directory listing</label>
+      <label><input type="radio" name="t3" value="c"> Cross-site scripting</label>
+    </fieldset>
+    <button type="button" data-task="3">Check answer</button>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card task">
+    <h3>Task 4: decode (harder)</h3>
+    <p>Open the text file in that folder. It holds a token that looks like gibberish. What’s the name of the encoding used? Then use the decoder below to reveal it.</p>
+    <div class="row"><label for="a4" style="margin:0">Encoding name</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+    <h3>Decoder tool</h3>
+    <label for="dec-in">Paste text to decode</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out" aria-live="polite">Output appears here.</pre>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <p>Try each task on your own first. Stuck? Reveal hints one at a time. They get more specific each time.</p>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Once you’ve decoded the token, submit it here. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <p>Write a few sentences for each, then open the discussion points to compare your thinking.</p>
+  <div class="card"><label for="r1">1. Why is a developer’s comment in the source code risky, even though visitors can’t see it on the page?</label>
+    <textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Anyone can read the source. Comments often hold paths, names, old credentials or reminders about weak spots. Best practice: strip comments from production builds.</p></details></div>
+  <div class="card"><label for="r2">2. If robots.txt isn’t a security control, what should protect a private folder instead?</label>
+    <textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>Authentication (a login) and authorisation checks on the server, plus not storing sensitive files in public folders at all.</p></details></div>
+  <div class="card"><label for="r3">3. Someone says, “It’s encoded, so it’s protected.” How would you explain the problem to them kindly?</label>
+    <textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Encoding changes format, not secrecy. Anyone can reverse it with no key. Secrets need proper encryption, and ideally shouldn’t sit in public files.</p></details></div>
+  <div class="card"><label for="r4">4. This page checks your flag with JavaScript that you can read in the page source. What does that tell you about trusting checks that run in the browser?</label>
+    <textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Anything sent to the browser can be inspected. That’s fine for a learning game. For real security decisions, the server has to do the checking.</p></details></div>
+  <div class="card"><label for="r5">5. You find an exposed backup on a real company’s site. What do you do next, and why?</label>
+    <textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Don’t download or share it. Stop, note what you saw, and report it through the company’s security contact or disclosure policy. Acting without permission can be illegal, even with good intentions.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Recon is about noticing what’s already public, and it comes before any other security testing.</li>
+    <li>HTML comments are invisible on screen but readable by anyone.</li>
+    <li><code>robots.txt</code> is a request to crawlers, not a lock. It can even point attackers to sensitive folders.</li>
+    <li>Directory listings and forgotten backups are common, avoidable misconfigurations.</li>
+    <li>Base64 is encoding, not encryption. Anyone can decode it.</li>
+    <li>Defenders use the same steps to find and fix problems first. Always get permission before testing.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Try the next rooms on your path: <a href="http-headers.html">HTTP headers</a>, cookies and sessions, then login enumeration. Each one builds on what you’ve practised here.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p>
+    <p>CYBER SECURITY LEARNING ROOM</p>
+    <p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p>
+  </div>
+</footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/recon-101.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

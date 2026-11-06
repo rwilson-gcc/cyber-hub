@@ -1,0 +1,45 @@
+/* Brand bar (logo + learner ID) shown at the top of every page */
+.brandbar{background:var(--char);color:var(--van)}
+.brandbar-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.brand-logo{display:block;line-height:0}
+.brand-logo img{display:block;width:96px;height:96px}
+.brandbar-right{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;justify-content:flex-end}
+.back-link{color:var(--van);font-size:.95rem;text-decoration:none;padding:.3rem .2rem}
+.back-link::before{content:"\2190\00a0"}
+.back-link:hover{color:var(--yellow);text-decoration:underline}
+.brandbar :focus-visible{outline-color:var(--yellow)}
+
+/* Learner ID badge + panel */
+.learner-slot{position:relative}
+.learner-btn{font:inherit;font-size:.9rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;border:2px solid var(--van);border-radius:999px;padding:.35rem .9rem;background:transparent;color:var(--van)}
+.learner-btn:hover,.learner-btn[aria-expanded=true]{background:var(--van);color:var(--char)}
+.learner-dot{width:.7rem;height:.7rem;border-radius:50%;background:var(--mint);border:2px solid var(--char);flex:0 0 auto}
+.learner-dot.saving{background:var(--yellow)}
+.learner-dot.offline{background:var(--coral)}
+.learner-panel{position:absolute;right:0;top:calc(100% + .5rem);z-index:20;width:min(360px,92vw);background:var(--card);color:var(--char);border:2px solid var(--char);border-radius:14px;padding:1rem 1.1rem;box-shadow:6px 6px 0 var(--char)}
+.learner-panel[hidden]{display:none}
+.learner-panel h2{font-family:inherit;text-transform:none;font-size:1.05rem;font-weight:700;letter-spacing:0;line-height:1.3;margin:0 0 .4rem}
+.learner-panel p{margin:.3rem 0;font-size:.88rem;line-height:1.5}
+.learner-id{display:block;font-family:ui-monospace,Consolas,Menlo,monospace;font-size:1.1rem;font-weight:700;background:var(--yellow);border:2px solid var(--char);border-radius:10px;padding:.5rem .7rem;margin:.5rem 0;word-break:break-all;user-select:all}
+.learner-panel .lrow{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.5rem 0}
+.learner-panel input[type=text]{font:inherit;font-size:.9rem;padding:.4rem .6rem;border:2px solid var(--char);border-radius:10px;background:#fff;color:var(--char);min-width:0;flex:1 1 150px;text-transform:uppercase}
+.learner-panel button{font:inherit;font-size:.85rem;font-weight:700;cursor:pointer;border:2px solid var(--char);border-radius:999px;padding:.35rem .9rem;background:var(--char);color:var(--van)}
+.learner-panel button:hover{background:var(--blue)}
+.learner-panel button.alt{background:var(--yellow);color:var(--char)}
+.learner-panel button.alt:hover{background:var(--pink)}
+.learner-panel hr{border:0;border-top:2px solid var(--char);margin:.7rem 0}
+.learner-msg{font-weight:700;font-size:.85rem;margin:.4rem 0 0;min-height:1.2em}
+.learner-panel a{color:var(--blue)}
+
+/* "Life Changing Stuff" lockup in the footer */
+footer .lcs{display:flex;align-items:center}
+footer .lcs img{display:block;height:56px;width:auto}
+@media (prefers-reduced-motion:reduce){.learner-btn{transition:none}}
+body:not([data-room]) .back-link{display:none}
+
+/* Small screens: keep the decorative arc below the hero text instead of over it */
+.hero .wrap{position:relative;z-index:1}
+@media (max-width:700px){
+  header.hero{padding-bottom:6.5rem}
+  .hero .arc{width:250px;height:125px;border-width:26px;border-radius:125px 125px 0 0;right:-40px;bottom:-24px}
+}

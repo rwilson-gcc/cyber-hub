@@ -1,0 +1,20 @@
+/* access-control: hero colours and room-specific components */
+header.hero{background:var(--pink);color:var(--char);position:relative;overflow:hidden;padding:3.5rem 0 7rem}
+.hero h1{font-size:clamp(2.6rem,8.5vw,5rem);max-width:15ch}
+.arc{position:absolute;right:-60px;bottom:-30px;width:480px;height:240px;border:46px solid var(--blue);border-bottom:0;border-radius:240px 240px 0 0;transform:rotate(-8deg)}
+table{border-collapse:collapse;width:100%;margin:.8rem 0;font-size:.92rem}
+th,td{border:2px solid var(--char);padding:.5rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--yellow)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;margin:1rem 0}
+.cols div{border:2px solid var(--char);border-radius:12px;padding:.9rem 1rem}
+.cols .h1{background:var(--mint)}.cols .v1{background:var(--coral)}
+.flow li{flex:1 1 150px;border:2px solid var(--char);border-radius:12px;padding:.7rem .8rem;font-size:.95rem;background:var(--card)}
+.flow li:nth-child(1){background:var(--yellow)}.flow li:nth-child(2){background:var(--mint)}.flow li:nth-child(3){background:var(--pink)}.flow li:nth-child(4){background:var(--coral)}
+input[type=text]{font:inherit;padding:.55rem .8rem;border:2px solid var(--char);border-radius:10px;background:#fff;color:var(--char);min-width:0;flex:1 1 200px}
+.browser .bar{background:var(--char);padding:.6rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.browser .bar span{color:var(--van);align-self:center;font-family:ui-monospace,Consolas,monospace;font-size:.85rem}
+.browser .bar input{background:var(--van)}
+.browser .bar button{background:var(--yellow);color:var(--char);padding:.4rem .9rem}
+.browser .bar button:hover{background:var(--pink)}
+.screen{padding:1rem 1.2rem;min-height:210px;background:var(--van)}
+.status-line{font-weight:700;margin:0 0 .5rem}

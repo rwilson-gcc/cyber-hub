@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTTP Headers: what your browser isn't telling you | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/http-headers.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="http-headers">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>HTTP headers: what your browser isn't telling you</h1>
+    <p>Every request and response carries a hidden envelope of metadata. Learn to read it, and you'll spot leaks and missing defences that the page itself never shows you.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>When your browser asks a website for a page, it doesn't just send the address. It sends a bundle of extra information called headers, and the server replies with a bundle of its own. Neither bundle shows up on screen, but both are easy to read if you know where to look.</p>
+  <h3>Why does it matter?</h3>
+  <p>Headers often say more than they should. A server might announce exactly which software version it's running, handing an attacker a shortcut to known weaknesses. Or a site might simply forget to set headers that protect visitors, leaving the door open to attacks like clickjacking.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Security scanners check headers automatically, and so do attackers. Missing security headers are one of the most common, most avoidable findings in real penetration test reports.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Think of a parcel. The contents are the webpage. The label on the outside is the headers: sender, courier, handling instructions, maybe a barcode. You can learn a lot about a parcel without ever opening it, just by reading the label.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only inspect headers on systems you own or have permission to test. This room is a complete simulation, so explore freely.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain the difference between a request header and a response header.</li>
+    <li>Read an HTTP status code and know roughly what it means.</li>
+    <li>Recognise headers that leak information, such as <code>Server</code> and <code>X-Powered-By</code>.</li>
+    <li>Name common security headers and what each one defends against.</li>
+    <li>Find and decode a value hidden inside a response header.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+
+  <h3>Idea 1: a request and a response both carry headers</h3>
+  <ol class="flow" aria-label="Request and response flow">
+    <li><b>1. You ask</b>Browser sends a request: method, path, and request headers.</li>
+    <li><b>2. Server replies</b>A status code, then response headers.</li>
+    <li><b>3. Then the body</b>The actual HTML, image or file.</li>
+    <li><b>4. You read it</b>A header inspector shows all of this at once.</li>
+  </ol>
+
+  <h3>Idea 2: status codes are a quick summary</h3>
+  <table>
+    <tr><th>Range</th><th>Meaning</th><th>Example</th></tr>
+    <tr><td>2xx</td><td>Success</td><td>200 OK</td></tr>
+    <tr><td>3xx</td><td>Redirect</td><td>301 Moved Permanently</td></tr>
+    <tr><td>4xx</td><td>Client error</td><td>403 Forbidden, 404 Not Found</td></tr>
+    <tr><td>5xx</td><td>Server error</td><td>500 Internal Server Error</td></tr>
+  </table>
+  <p>A 403 on <code>/admin</code> confirms the page exists, it's just refusing you. That's useful recon, even without seeing the page.</p>
+
+  <h3>Idea 3: some headers leak more than intended</h3>
+  <pre>Server: nginx/1.14.0
+<span class="bad">X-Powered-By: PHP/7.2.0</span></pre>
+  <p>Naming the exact software version tells an attacker precisely which known weaknesses to try. Good practice is to remove or generalise these headers.</p>
+
+  <h3>Idea 4: security headers are defences, not decoration</h3>
+  <table>
+    <tr><th>Header</th><th>Defends against</th></tr>
+    <tr><td><code>X-Frame-Options</code> / CSP <code>frame-ancestors</code></td><td>Clickjacking: the page being loaded inside an invisible frame on another site</td></tr>
+    <tr><td><code>Content-Security-Policy</code></td><td>Limits where scripts and content can load from, reducing XSS impact</td></tr>
+    <tr><td><code>Strict-Transport-Security</code></td><td>Forces the browser to always use HTTPS</td></tr>
+    <tr><td><code>X-Content-Type-Options: nosniff</code></td><td>Stops the browser guessing a file's type in a risky way</td></tr>
+  </table>
+  <fieldset>
+    <legend>Mini quiz: which header?</legend>
+    <p>A site can be loaded inside a hidden frame on an attacker's page, tricking users into clicking things they can't see. Which header family is missing?</p>
+    <label><input type="radio" name="q1" value="a"> X-Content-Type-Options</label>
+    <label><input type="radio" name="q1" value="b"> X-Frame-Options / Content-Security-Policy</label>
+    <label><input type="radio" name="q1" value="c"> Server</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>northbank-shop.example</code>:</p>
+  <div class="card">
+    <p class="status-line">GET /  &rarr;  200 OK</p>
+    <pre>Server: Apache/2.2.3
+<span class="bad">X-Powered-By: PHP/5.3.1</span>
+Content-Type: text/html</pre>
+    <p>Apache 2.2.3 and PHP 5.3.1 are both very old. A quick search for either version turns up long lists of known weaknesses. The fix isn't to panic, it's to upgrade the software and stop announcing the exact version in headers.</p>
+    <p class="status-line">GET /checkout  &rarr;  200 OK</p>
+    <pre>Content-Type: text/html
+Set-Cookie: session=abc123</pre>
+    <p>No <code>X-Frame-Options</code> or CSP here either. A page handling payments with no clickjacking defence is a real finding worth reporting.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is <code>riverside-books.example</code>. Use the simulated inspector below: pick a path and send the request to see its status code, headers and body.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated header inspector">
+    <form class="bar" id="nav-form" aria-label="Request builder">
+      <span aria-hidden="true">riverside-books.example</span>
+      <label for="path" style="position:absolute;left:-999px">Path</label>
+      <input type="text" id="path" value="/" autocomplete="off" spellcheck="false" style="max-width:220px">
+      <button type="submit">Send request</button>
+    </form>
+    <div class="screen" id="screen" aria-live="polite" tabindex="0" aria-label="Response"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: read a status code (easy)</h3>
+    <p>Send a request to <code>/staff-area</code>. What status code comes back?</p>
+    <div class="row"><label for="a1" style="margin:0">Status code</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: spot the leak (easy–medium)</h3>
+    <p>Send a request to <code>/</code>. A response header names an outdated piece of software. What's the software called? (Just the name, no version needed.)</p>
+    <div class="row"><label for="a2" style="margin:0">Software name</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: find the missing defence (medium)</h3>
+    <p>Send a request to <code>/basket</code>. Which security header is missing that would stop this page being loaded inside a hidden frame on another site?</p>
+    <fieldset>
+      <legend>Missing header</legend>
+      <label><input type="radio" name="t3" value="a"> X-Content-Type-Options</label>
+      <label><input type="radio" name="t3" value="b"> X-Frame-Options</label>
+      <label><input type="radio" name="t3" value="c"> Content-Length</label>
+    </fieldset>
+    <button type="button" data-task="3">Check answer</button>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: decode the hidden header (harder)</h3>
+    <p>Send a request to <code>/status</code>. One response header holds a Base64 value. Decode it below to get your flag.</p>
+    <label for="dec-in">Paste text to decode</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out" aria-live="polite">Output appears here.</pre>
+    <div class="row" style="margin-top:.6rem"><label for="a4" style="margin:0">Confirm: which header held it?</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you decoded. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Why might a company choose not to reveal exact software versions in headers, even though it costs nothing to leave them in?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Version strings give attackers a head start on finding known weaknesses. Removing them doesn't fix the weaknesses, but it slows down casual scanning.</p></details></div>
+  <div class="card"><label for="r2">2. A 403 and a 404 both stop you getting in. Why is it still useful to tell them apart during recon?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>404 usually means nothing is there. 403 means something is there but protected, which tells you where to focus attention and what to report.</p></details></div>
+  <div class="card"><label for="r3">3. Missing security headers rarely break a site's normal use. Why do they still matter?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>They're defence in depth: not needed for the site to function, but important when something else goes wrong, like a script injection or an embedded frame.</p></details></div>
+  <div class="card"><label for="r4">4. How is reading headers similar to, and different from, reading a page's HTML source, which you practised in the recon room?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Both are public information nobody hid behind a login. Headers are metadata about the exchange, while source is the page's actual content and structure.</p></details></div>
+  <div class="card"><label for="r5">5. If you were advising a small business on a budget, which header fix would you prioritise first, and why?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>There's no single right answer. Many practitioners would start with removing version-revealing headers and adding a frame-protection header, since both are quick, free and low-risk changes.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Headers are metadata that travel with every request and response, invisible on the page but easy to inspect.</li>
+    <li>Status codes give fast, useful signals, even for pages you can't open.</li>
+    <li>Headers like <code>Server</code> and <code>X-Powered-By</code> can leak exact software versions.</li>
+    <li>Security headers are free, simple defences that are easy to forget.</li>
+    <li>A header can hide an encoded value, just like a page's HTML can.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Try the next room on cookies and sessions, where you'll pick up where <code>Set-Cookie</code> left off here.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/http-headers.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

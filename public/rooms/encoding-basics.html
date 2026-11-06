@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encoding: Base64, hex and friends | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/encoding-basics.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="encoding-basics">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Encoding: Base64, hex and friends</h1>
+    <p>Data is often disguised so it can travel safely, not so it stays secret. This room teaches you to recognise the common encodings on sight, reverse them, and see why encoding is not encryption. Every message here is fictional.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Computers move data through systems that only understand certain characters. Encoding is the process of rewriting data in a different form so it fits: Base64 turns anything into plain letters and digits, hex writes each byte as two characters, and URL encoding makes text safe to put in a web address.</p>
+  <h3>Why does it matter?</h3>
+  <p>Encoded data looks scrambled, which makes people think it is protected. It is not. There is no key and no secret, so anyone who recognises the format can reverse it in seconds. Credentials, tokens and personal data are regularly exposed because someone treated encoding as security.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Web logins using HTTP Basic authentication send <code>username:password</code> as Base64. Cookies, email attachments and JSON Web Tokens use it too, and malware authors often wrap their code in layers of encoding to look harmless.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Writing a message in Morse code doesn&rsquo;t hide it from anyone who knows Morse. It just changes the alphabet. Encoding is the same: a different way of writing the same thing that anyone with the chart can read back.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only decode data you are entitled to see. Capturing other people&rsquo;s traffic or credentials without permission is a criminal offence under the Computer Misuse Act 1990. Every message in this room is fictional and generated in your browser.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain what encoding is and how it differs from encryption.</li>
+    <li>Recognise Base64, hex and URL encoding from how they look.</li>
+    <li>Decode each one by hand or with a tool, one layer at a time.</li>
+    <li>Spot layered encoding and know when to stop (when the result is readable).</li>
+    <li>Explain why encoded credentials are not protected credentials.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: encoding is just a different way of writing</h3>
+  <p>The same text can be written in several forms. None of them uses a key, and each can be turned back into the original by anyone who knows the rules.</p>
+  <pre>Text      Hi
+Hex       48 69
+Base64    SGk=
+URL       Hi   (no change: nothing needs escaping)</pre>
+  <ol class="flow" aria-label="Encoding life cycle">
+    <li><b>1. Original</b>Readable text or data.</li>
+    <li><b>2. Encode</b>Rewritten using a fixed, public rule.</li>
+    <li><b>3. Travel</b>Passes safely through systems with limits.</li>
+    <li><b>4. Decode</b>Anyone can reverse it. No key needed.</li>
+  </ol>
+
+  <h3>Idea 2: recognising the common encodings</h3>
+  <div class="cols">
+    <div class="h1"><b>Base64</b><p style="margin:.3rem 0 0">Letters, digits, <code>+</code> and <code>/</code>, often ending in <code>=</code> padding. Length is a multiple of 4. Example: <code>SGVsbG8=</code></p></div>
+    <div class="v1"><b>Hex</b><p style="margin:.3rem 0 0">Only <code>0-9</code> and <code>a-f</code>, in an even-length run, sometimes spaced into pairs. Example: <code>48 65 6c 6c 6f</code></p></div>
+    <div class="p1"><b>URL encoding</b><p style="margin:.3rem 0 0">Normal text with <code>%</code> followed by two hex digits where a character needed escaping. <code>%20</code> is a space.</p></div>
+  </div>
+  <fieldset>
+    <legend>Mini quiz: what is it?</legend>
+    <p>A captured string uses only the characters 0-9 and a-f, and its length is even. Which encoding is it most likely to be?</p>
+    <label><input type="radio" name="q1" value="a"> Hex</label>
+    <label><input type="radio" name="q1" value="b"> Base64</label>
+    <label><input type="radio" name="q1" value="c"> URL encoding</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: layers</h3>
+  <p>Data is sometimes encoded more than once, for example hex first and then Base64. Decode one layer at a time and look at the result. If it is still unreadable, work out what it looks like now and decode again. When you can read it, you are done.</p>
+
+  <h3>Idea 4: encoding is not encryption</h3>
+  <p>Encryption needs a secret key: without it the data stays unreadable. Encoding needs nothing, so it offers no protection at all. HTTP Basic authentication is the classic example: the password is only Base64, so the connection must use HTTPS to protect it.</p>
+  <fieldset>
+    <legend>Mini quiz: is it secure?</legend>
+    <p>A developer stores customer passwords as Base64 text "so they can’t be read". Is that secure?</p>
+    <label><input type="radio" name="q2" value="a"> No. Anyone can decode Base64 instantly</label>
+    <label><input type="radio" name="q2" value="b"> Yes. The text is scrambled</label>
+    <label><input type="radio" name="q2" value="c"> Yes. Base64 needs a secret key to reverse</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>fernhill-bakery.example</code>. A tester reviewing a web request spots this header:</p>
+  <div class="card">
+    <pre>Authorization: Basic YmFrZXI6b3ZlbjEyMw==</pre>
+    <p>The trailing <code>==</code> and the mix of letters and digits suggest Base64. Decoding it gives:</p>
+    <pre>baker:oven123</pre>
+    <p>A username and password, readable in one step and with no tools beyond a decoder. If that request had gone over plain HTTP, anyone on the network could have read it. The fix is not a cleverer encoding: it is HTTPS, and ideally a login system that doesn&rsquo;t send the password on every request.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>A fictional courier, <code>northgate-courier.example</code>, has had four messages captured from its internal tracker. Each one is in a different encoding. Use the workbench to decode them. The messages are generated in your browser, so nothing leaves your device.</p>
+
+  <div class="browser" role="region" aria-label="Captured messages">
+    <div class="bar"><span aria-hidden="true">captured-messages.log</span></div>
+    <div class="screen">
+      <p class="lab">Item A</p><pre id="item-a"></pre>
+      <p class="lab">Item B</p><pre id="item-b"></pre>
+      <p class="lab">Item C</p><pre id="item-c"></pre>
+      <p class="lab">Item D</p><pre id="item-d"></pre>
+    </div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Decoder workbench</h3>
+    <label for="wb-in">Paste text here</label>
+    <textarea id="wb-in" spellcheck="false"></textarea>
+    <div class="row">
+      <button type="button" class="alt" id="wb-b64d">Decode Base64</button>
+      <button type="button" class="alt" id="wb-hexd">Decode hex</button>
+      <button type="button" class="alt" id="wb-urld">Decode URL</button>
+      <button type="button" id="wb-b64e">Encode Base64</button>
+    </div>
+    <pre id="wb-out" aria-live="polite">Output appears here.</pre>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: identify and decode (easy)</h3>
+    <p>Item A uses letters and digits with <code>=</code> padding at the end. Decode it. At what time does the staff portal open?</p>
+    <div class="row"><label for="a1" style="margin:0">Opening time</label><input type="text" id="a1" autocomplete="off" spellcheck="false"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 2: a different encoding (easy)</h3>
+    <p>Item B is a run of two-character pairs using only 0-9 and a-f. Decode it. What is the locker code?</p>
+    <div class="row"><label for="a2" style="margin:0">Locker code</label><input type="text" id="a2" autocomplete="off" spellcheck="false"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 3: escaped characters (medium)</h3>
+    <p>Item C has <code>%</code> signs followed by two characters. Decode it. Which dock number is the meeting at?</p>
+    <div class="row"><label for="a3" style="margin:0">Dock number</label><input type="text" id="a3" autocomplete="off" spellcheck="false"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 4: peel the layers (harder)</h3>
+    <p>Item D has been encoded more than once. Decode it one layer at a time until you can read the flag, and use the result for the flag section below. How many layers of encoding did Item D have?</p>
+    <div class="row"><label for="a4" style="margin:0">Number of layers</label><input type="text" id="a4" autocomplete="off" spellcheck="false"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. How did you recognise each of the encodings in Items A to C?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Item A: mixed letters and digits with = padding (Base64). Item B: only 0-9 and a-f in pairs (hex). Item C: % followed by two hex digits (URL encoding). Recognition comes from the character set, the length pattern and any padding.</p></details></div>
+  <div class="card"><label for="r2">2. Why is Base64 not a form of encryption? What is missing?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>There is no key or secret. The rules are public, so anyone can reverse it. Encryption relies on a key that an attacker doesn’t have.</p></details></div>
+  <div class="card"><label for="r3">3. Give two legitimate reasons systems use encoding.</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: Base64 lets binary data (images, attachments) travel through text-only systems such as email or JSON; URL encoding stops special characters breaking a web address. Encoding is about compatibility, not secrecy.</p></details></div>
+  <div class="card"><label for="r4">4. Item D had two layers. Why might attackers or malware stack encodings, and does it make anything more secure?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Layers can slip past simple filters or make a payload look harmless at a glance, but they add no security: each layer is trivially reversible, and the real content is still exposed once decoded.</p></details></div>
+  <div class="card"><label for="r5">5. Where might encoded credentials appear in real systems, and what protects them properly?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>HTTP Basic auth headers, cookies and tokens such as JWTs. Proper protection is HTTPS in transit, and on the server, passwords stored with a salted, slow hash rather than encoded or reversibly encrypted.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Encoding changes how data is written, not who can read it.</li>
+    <li>Base64, hex and URL encoding each have a recognisable look.</li>
+    <li>Decode one layer at a time and stop when the result is readable.</li>
+    <li>Anything protected only by encoding should be treated as plain text.</li>
+    <li>Real protection needs encryption with a key, hashing for passwords, and HTTPS in transit.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="classical-ciphers.html">Classical ciphers: ROT13 and Caesar</a>, where data really is scrambled, but in a way that is still easy to break.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/encoding-basics.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

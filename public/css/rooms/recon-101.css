@@ -1,0 +1,27 @@
+/* recon-101: hero colours and room-specific components */
+header.hero{background:var(--yellow);position:relative;overflow:hidden;padding:3.5rem 0 7rem}
+.hero h1{font-size:clamp(2.8rem,9vw,5.6rem);max-width:12ch}
+.arc{position:absolute;right:-60px;bottom:-30px;width:480px;height:240px;border:46px solid var(--pink);border-bottom:0;border-radius:240px 240px 0 0;transform:rotate(-8deg)}
+nav :focus-visible{outline-color:var(--yellow)}
+pre .c{color:var(--mint)}pre .k{color:var(--yellow)}
+.flow li{flex:1 1 130px;border:2px solid var(--char);border-radius:12px;padding:.7rem .8rem;font-size:.95rem;background:var(--card);position:relative}
+.flow li:nth-child(1){background:var(--yellow)}.flow li:nth-child(2){background:var(--mint)}.flow li:nth-child(3){background:var(--pink)}.flow li:nth-child(4){background:var(--coral)}
+.building{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin:1rem 0}
+.building div{border:2px solid var(--char);border-radius:12px;padding:.8rem;background:var(--card)}
+.building .pub{background:var(--mint)}.building .sign{background:var(--yellow)}.building .back{background:var(--coral)}
+input[type=text]{font:inherit;padding:.55rem .8rem;border:2px solid var(--char);border-radius:10px;background:#fff;color:var(--char);min-width:0;flex:1 1 200px}
+.browser .bar{background:var(--char);padding:.6rem;display:flex;gap:.5rem;flex-wrap:wrap}
+.browser .bar span{color:var(--van);align-self:center;font-family:ui-monospace,Consolas,monospace;font-size:.9rem}
+.browser .bar input{background:var(--van)}
+.browser .bar button{background:var(--yellow);color:var(--char);padding:.4rem .9rem}
+.browser .bar button:hover{background:var(--pink)}
+.screen{padding:1rem 1.2rem;min-height:210px;background:var(--van)}
+.screen pre{margin:0}
+.screen .shop{border:2px dashed var(--char);border-radius:10px;padding:1rem;background:#fff}
+.task h3{margin-top:0}
+.status{font-weight:700}
+.home-link a {
+color: white;
+text-decoration: none;
+font-weight: bold;
+}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookies &amp; Sessions: the trust you carry in your pocket | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/cookies-sessions.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="cookies-sessions">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Cookies &amp; sessions: the trust you carry in your pocket</h1>
+    <p>HTTP forgets you the moment a page loads. Cookies are how a site remembers who you are between clicks &mdash; and how an attacker can borrow your identity if they're handled carelessly.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>HTTP is stateless: every request is handled as if it's the first time you've ever visited. So how does a site remember you're logged in as you move from page to page? It asks your browser to carry a small piece of data, a cookie, and show it on every later request.</p>
+  <h3>Why does it matter?</h3>
+  <p>A session cookie is often the only thing standing between "just anyone" and "logged in as you." If that cookie can be read by a malicious script, guessed because it's predictable, or sent somewhere it shouldn't be, an attacker can step into your session without ever knowing your password.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Session hijacking and cookie theft are behind real account takeovers every year, often through missing cookie protections rather than some exotic exploit. Fixing it is usually a one-line configuration change, which is exactly why it's worth learning to spot.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>A session cookie is like a festival wristband. Once staff see it on your wrist, they assume it's you and wave you through. They don't check your face every time. If someone can copy your wristband, or if the wristbands are just numbered 1001, 1002, 1003 in order, that trust breaks down fast.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only inspect or test cookies on systems you own or have permission to test. This room is a complete simulation &mdash; no real cookies are set on your device.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain why HTTP needs cookies to keep you "logged in."</li>
+    <li>Name the key cookie attributes: <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite</code>, <code>Expires</code>.</li>
+    <li>Explain what makes a session identifier predictable, and why that's dangerous.</li>
+    <li>Recognise sensitive data stored readably inside a cookie.</li>
+    <li>Decode a cookie value to recover a hidden flag.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+
+  <h3>Idea 1: cookies carry state across a stateless protocol</h3>
+  <ol class="flow" aria-label="Cookie lifecycle">
+    <li><b>1. You log in</b>Server checks your password, then issues a session cookie.</li>
+    <li><b>2. Browser stores it</b>The cookie sits in your browser, tied to that site.</li>
+    <li><b>3. Sent every time</b>Each later request to that site includes the cookie automatically.</li>
+  </ol>
+
+  <h3>Idea 2: cookie attributes are the small print that matters</h3>
+  <table>
+    <tr><th>Attribute</th><th>What it does</th><th>Risk if missing</th></tr>
+    <tr><td><code>HttpOnly</code></td><td>Stops JavaScript on the page from reading the cookie</td><td>A script injected via XSS could steal the session cookie directly</td></tr>
+    <tr><td><code>Secure</code></td><td>Only sends the cookie over HTTPS</td><td>Cookie could be intercepted on an insecure connection</td></tr>
+    <tr><td><code>SameSite</code></td><td>Controls whether the cookie is sent on requests from other sites</td><td>Can enable cross-site request forgery (CSRF)</td></tr>
+    <tr><td><code>Expires</code> / <code>Max-Age</code></td><td>Sets when the cookie stops being valid</td><td>A cookie that never expires stays dangerous indefinitely if stolen</td></tr>
+  </table>
+  <fieldset>
+    <legend>Mini quiz: which attribute?</legend>
+    <p>A site has a script-injection bug elsewhere on the page. Which missing attribute would let that script read and steal the session cookie?</p>
+    <label><input type="radio" name="q1" value="a"> Secure</label>
+    <label><input type="radio" name="q1" value="b"> HttpOnly</label>
+    <label><input type="radio" name="q1" value="c"> Expires</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: predictable session IDs</h3>
+  <p>A session ID should look random and be hard to guess, something like <code>9f3a7c21e0...</code>. If instead sessions count up one at a time, like <code>1001</code>, <code>1002</code>, <code>1003</code>, an attacker who gets one valid session can simply try nearby numbers to land inside someone else's.</p>
+
+  <h3>Idea 4: don't store secrets readably in a cookie</h3>
+  <p>A cookie is just text sitting on the user's machine. Anyone with access to that browser, or anyone who intercepts the cookie, can read it. Encoding it with Base64 hides it from a casual glance, but not from anyone who knows to decode it &mdash; exactly like the Base64 you decoded in the recon room.</p>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional forum, <code>oldtoon-forum.example</code>:</p>
+  <div class="card">
+    <pre>Set-Cookie: session=4021
+Set-Cookie: theme=dark; Secure; SameSite=Lax</pre>
+    <p>The <code>session</code> cookie has no <code>HttpOnly</code>, no <code>Secure</code>, and its value is just a small incrementing number. Put together, that's three separate weaknesses in one line: a script could read it, it could travel over plain HTTP, and it's easy to guess a neighbouring value. Any one of these is worth reporting; all three together make it urgent.</p>
+    <p>The fix is small: add <code>HttpOnly; Secure; SameSite=Strict</code> and generate session IDs from a long random value instead of a counter.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is <code>glenpark-forum.example</code>. Log in as a guest below to see the cookies the site sets, then inspect them in the table.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text" style="font-weight:700;margin:0">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated cookie jar">
+    <div class="bar"><span>glenpark-forum.example</span><button type="button" id="login-btn">Log in as guest</button></div>
+    <div class="screen" id="screen" aria-live="polite">
+      <p>Not logged in yet. Click “Log in as guest” to see which cookies the site sets.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: name the cookie (easy)</h3>
+    <p>After logging in, what's the name of the cookie that keeps you signed in?</p>
+    <div class="row"><label for="a1" style="margin:0">Cookie name</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: spot the missing attribute (easy–medium)</h3>
+    <p>Looking at the session cookie's attribute row, which important attribute is missing that would stop a malicious script from reading it?</p>
+    <div class="row"><label for="a2" style="margin:0">Attribute name</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: explain the pattern (medium)</h3>
+    <p>The session value is a small, steadily incrementing number. What risk does that create?</p>
+    <fieldset>
+      <legend>Choose the best answer</legend>
+      <label><input type="radio" name="t3" value="a"> None &mdash; the number is hidden from view</label>
+      <label><input type="radio" name="t3" value="b"> Predictable session IDs let an attacker guess other users' sessions</label>
+      <label><input type="radio" name="t3" value="c"> It makes the server slower</label>
+    </fieldset>
+    <button type="button" data-task="3">Check answer</button>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: decode the second cookie (harder)</h3>
+    <p>A second cookie, <code>prefs</code>, holds a Base64-encoded value. Decode it below to reveal your flag.</p>
+    <label for="dec-in">Paste text to decode</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out" aria-live="polite">Output appears here.</pre>
+    <div class="row" style="margin-top:.6rem"><label for="a4" style="margin:0">Confirm: which cookie held it?</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you decoded. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Why does a session cookie need to be unpredictable, not just hidden from view?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Hiding isn't the same as securing. If the format is guessable, an attacker doesn't need to see your exact cookie, just a valid-looking one.</p></details></div>
+  <div class="card"><label for="r2">2. HttpOnly stops JavaScript reading a cookie. What kind of vulnerability elsewhere on a page would make that protection matter most?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>Cross-site scripting (XSS). If an attacker can run their own JavaScript on the page, HttpOnly is what stops that script from stealing the session cookie.</p></details></div>
+  <div class="card"><label for="r3">3. Why might a developer be tempted to store user data directly in a cookie, and what's the safer alternative?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>It's quick and avoids extra database lookups. The safer pattern is to store only a random session ID in the cookie, with the real data kept server-side.</p></details></div>
+  <div class="card"><label for="r4">4. How is a Base64-encoded cookie value similar to the Base64 token you decoded in the recon room?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Both rely on the same mistake: assuming an unusual-looking string is effectively hidden, when anyone can decode it in seconds with no key.</p></details></div>
+  <div class="card"><label for="r5">5. If you found a live site setting cookies this way, what would you report, and what would you recommend?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Report the missing HttpOnly/Secure/SameSite attributes and the predictable session format. Recommend random, sufficiently long session IDs, all three attributes set, and no sensitive data stored directly in cookies.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Cookies let a stateless protocol remember who you are between requests.</li>
+    <li><code>HttpOnly</code>, <code>Secure</code> and <code>SameSite</code> each defend against a different kind of attack.</li>
+    <li>A predictable session ID can be guessed, no stealing required.</li>
+    <li>Encoding a cookie value isn't the same as protecting it.</li>
+    <li>Small, free configuration changes close most cookie weaknesses.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Try the next room on login enumeration, where you'll see how error messages during login can leak just as much as a careless cookie.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/cookies-sessions.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

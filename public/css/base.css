@@ -1,0 +1,24 @@
+/* Glasgow Clyde College brand tokens
+   Optimistic Yellow #ffd200, Charcoal #2b2727, Vanilla #faefe6, Positive Pink #f964f5,
+   Minty Fresh #77f1b6, Electric Blue #005eff, Coral Crush #ff6359.
+   Fonts: Sink (headlines, caps only) and Loos Normal (body). Both are licensed, so the stacks
+   fall back to Sofia Sans (the approved alternative) then system fonts.
+   Add @font-face rules here if you host licensed font files in your repo. */
+:root{--yellow:#ffd200;--char:#2b2727;--van:#faefe6;--pink:#f964f5;--mint:#77f1b6;--blue:#005eff;--coral:#ff6359;--card:#fff9f4}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--van);color:var(--char);font:1.05rem/1.65 "Loos Normal","Sofia Sans","Segoe UI",system-ui,sans-serif}
+.h,h1,h2{font-family:"Sink",Impact,"Haettenschweiler","Arial Narrow Bold",sans-serif;text-transform:uppercase;font-weight:400;letter-spacing:.01em;line-height:1.02;margin:0 0 .6em}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.skip{position:absolute;left:-999px;background:var(--char);color:var(--van);padding:.6rem 1rem;z-index:9}
+.skip:focus{left:8px;top:8px}
+nav a{color:var(--van);font-size:.95rem;text-decoration:none;padding:.3rem .2rem}
+nav a:hover{color:var(--yellow);text-decoration:underline}
+section{padding:3rem 0;border-bottom:2px solid var(--char)}
+.card{background:var(--card);border:2px solid var(--char);border-radius:14px;padding:1.2rem 1.4rem;margin:1.2rem 0}
+.flow{display:flex;flex-wrap:wrap;gap:.5rem;align-items:stretch;margin:1.2rem 0;padding:0;list-style:none}
+.flow b{display:block;font-size:1.05rem}
+footer{background:var(--char);color:var(--van);padding:1.4rem 0;font-size:.85rem;letter-spacing:.06em}
+footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+footer p{margin:0}

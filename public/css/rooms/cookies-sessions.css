@@ -1,0 +1,17 @@
+/* cookies-sessions: hero colours and room-specific components */
+header.hero{background:var(--mint);position:relative;overflow:hidden;padding:3.5rem 0 7rem}
+.hero h1{font-size:clamp(2.6rem,8.5vw,5rem);max-width:15ch}
+.arc{position:absolute;right:-60px;bottom:-30px;width:480px;height:240px;border:46px solid var(--char);border-bottom:0;border-radius:240px 240px 0 0;transform:rotate(-8deg);opacity:.15}
+pre .bad{color:var(--coral)}pre .good{color:var(--mint)}
+table{border-collapse:collapse;width:100%;margin:.8rem 0;font-size:.92rem}
+th,td{border:2px solid var(--char);padding:.5rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--yellow)}
+.flow li{flex:1 1 150px;border:2px solid var(--char);border-radius:12px;padding:.7rem .8rem;font-size:.95rem;background:var(--card)}
+.flow li:nth-child(1){background:var(--yellow)}.flow li:nth-child(2){background:var(--mint)}.flow li:nth-child(3){background:var(--pink)}
+input[type=text]{font:inherit;padding:.55rem .8rem;border:2px solid var(--char);border-radius:10px;background:#fff;color:var(--char);min-width:0;flex:1 1 200px}
+.browser .bar{background:var(--char);padding:.6rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.browser .bar span{color:var(--van);font-family:ui-monospace,Consolas,monospace;font-size:.9rem}
+.browser .bar button{background:var(--yellow);color:var(--char);padding:.4rem .9rem}
+.browser .bar button:hover{background:var(--pink)}
+.screen{padding:1rem 1.2rem;min-height:160px;background:var(--van)}
+.yes{color:#0a6b3a;font-weight:700}.miss{color:#a3261a;font-weight:700}

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login Enumeration: when error messages talk too much | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/login-enumeration.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="login-enumeration">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Login enumeration: when error messages talk too much</h1>
+    <p>A login form says more than "yes" or "no." Learn to read what its error messages are accidentally telling you, and why weak passwords make that information dangerous.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Username enumeration happens when a login form responds differently depending on whether a username exists, even though it shouldn't matter to you at all. Combine that with a weak or default password, and an attacker suddenly has a clear path into an account.</p>
+  <h3>Why does it matter?</h3>
+  <p>Knowing a username is real narrows an attacker's job from "guess a username and a password" down to just "guess a password." That's a huge head start, especially against accounts using common or default passwords.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Credential stuffing attacks, where attackers try huge lists of leaked usernames and passwords against login forms, rely on exactly this weakness. Many real breaches trace back to an account with a guessable username and an equally guessable password.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine knocking on doors down a street. Most doors stay silent. One door's intercom says, "Wrong code, try again," instead of nothing at all. You've just learned someone lives there, without them ever opening the door. Now you know exactly where to spend your time.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test login forms you own or have explicit permission to test. Trying passwords against real accounts you don't own is illegal. This room is a complete simulation, with no real accounts involved.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain what username enumeration is and why it's a risk.</li>
+    <li>Compare a safe, generic login error with a risky, specific one.</li>
+    <li>Use differing error messages to identify a valid username.</li>
+    <li>Explain why common or default passwords are dangerous once a username is known.</li>
+    <li>Combine enumeration and a weak password to reach a protected page.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+
+  <h3>Idea 1: generic messages protect you, specific ones don't</h3>
+  <table>
+    <tr><th>Scenario</th><th>Risky message</th><th>Safer message</th></tr>
+    <tr><td>Username doesn't exist</td><td>"That username doesn't exist."</td><td>"Invalid username or password."</td></tr>
+    <tr><td>Username exists, wrong password</td><td>"Incorrect password."</td><td>"Invalid username or password."</td></tr>
+  </table>
+  <p>The safe version gives exactly the same message either way, so an attacker learns nothing from trying a username.</p>
+  <fieldset>
+    <legend>Mini quiz: spot the leak</legend>
+    <p>A login form shows "Account not found" for a bad username and "Wrong password" for a bad password on a real account. What's happening here?</p>
+    <label><input type="radio" name="q1" value="a"> This is normal and poses no risk.</label>
+    <label><input type="radio" name="q1" value="b"> This is username enumeration &mdash; the messages reveal which usernames exist.</label>
+    <label><input type="radio" name="q1" value="c"> This is encryption of the username.</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 2: the enumeration-to-access path</h3>
+  <ol class="flow" aria-label="Enumeration to access path">
+    <li><b>1. Try usernames</b>Note which ones get a different message.</li>
+    <li><b>2. Confirm one</b>That username is real.</li>
+    <li><b>3. Try passwords</b>Test common or likely passwords against it.</li>
+    <li><b>4. Access</b>A weak password gets them straight in.</li>
+  </ol>
+
+  <h3>Idea 3: weak passwords are the second half of the problem</h3>
+  <p>Common weak passwords include things like <code>password123</code>, a word plus a year (<code>Summer2026!</code>), or a word plus a short number (<code>welcome1</code>). None of these need "cracking" in a technical sense; they just need guessing, often from a short, predictable list.</p>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>mapleview-gym.example</code>:</p>
+  <div class="card">
+    <p>Trying username <code>admin</code> with any password returns: <span class="msg warn">Incorrect password.</span></p>
+    <p>Trying username <code>sjones</code> with any password returns: <span class="msg bad">Account not found.</span></p>
+    <p>That one word, "Incorrect" versus "not found," confirms <code>admin</code> is a real account. From there, trying a short list of common passwords against <code>admin</code> is a quick next step, and on a badly configured site, one of them might work.</p>
+    <p>The fix: always show the same generic message, and add rate limiting so repeated guesses get slowed down or locked out.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is the staff portal at <code>artisan-bakery.example</code>. Try usernames from this list: <code>admin</code>, <code>root</code>, <code>test</code>, <code>manager</code>. Once you find the valid one, try passwords from this list: <code>password123</code>, <code>welcome1</code>, <code>Summer2026!</code>, <code>baker123</code>.</p>
+
+  <div class="card" aria-label="Progress">
+    <p id="prog-text" style="font-weight:700;margin:0">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated staff login">
+    <div class="bar"><span>artisan-bakery.example/staff-login</span></div>
+    <div class="screen">
+      <form id="login-form">
+        <div class="row">
+          <div style="flex:1 1 160px"><label for="user">Username</label><input type="text" id="user" autocomplete="off"></div>
+          <div style="flex:1 1 160px"><label for="pass">Password</label><input type="password" id="pass" autocomplete="off"></div>
+        </div>
+        <p style="margin-top:.7rem"><button type="submit">Log in</button></p>
+      </form>
+      <div id="login-result" aria-live="polite"></div>
+      <div id="dashboard" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: read the message (easy)</h3>
+    <p>Try username <code>root</code> with any password. What does the exact message say?</p>
+    <div class="row"><label for="a1" style="margin:0">Message</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: find the real account (easy–medium)</h3>
+    <p>Try each username on the list with any password. Which one is valid?</p>
+    <div class="row"><label for="a2" style="margin:0">Username</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: guess the password (medium)</h3>
+    <p>Try each password on the list against that username. Which password logs you in?</p>
+    <div class="row"><label for="a3" style="margin:0">Password</label><input type="text" id="a3" autocomplete="off"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: decode the dashboard note (harder)</h3>
+    <p>Once logged in, the staff dashboard shows a system note in Base64. Decode it below to reveal your flag.</p>
+    <label for="dec-in">Paste text to decode</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out" aria-live="polite">Output appears here.</pre>
+    <div class="row" style="margin-top:.6rem"><label for="a4" style="margin:0">Confirm: where was the note shown?</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you decoded. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Why does a single-word difference between two error messages matter so much?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>It's a binary signal: real account or not. Attackers don't need much information to narrow their search, and one word is enough.</p></details></div>
+  <div class="card"><label for="r2">2. Generic error messages are slightly less helpful to genuine users who mistype their username. Why might that trade-off still be worth it?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>Usability and security sometimes pull in different directions. Here, the security benefit (hiding which accounts exist) generally outweighs a small amount of extra friction for honest users.</p></details></div>
+  <div class="card"><label for="r3">3. Why does a strong password matter even on a well-configured login form?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Defences work in layers. Even if a site hides which usernames are valid, a weak password is still guessable through other means, like leaked password lists.</p></details></div>
+  <div class="card"><label for="r4">4. What role could account lockouts or rate limiting play alongside generic error messages?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>They slow down or stop repeated automated guessing, making both enumeration and password guessing far less practical even if messages leak a little information.</p></details></div>
+  <div class="card"><label for="r5">5. You've now practised recon, header analysis, cookie inspection and login enumeration. Which felt most like something you could check on a real site this week, and why?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>There's no single right answer. Many learners find source code and header checks the most approachable starting point, since both need nothing more than a browser.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Different error messages for "no such user" and "wrong password" leak which accounts are real.</li>
+    <li>A generic message that never changes closes that leak.</li>
+    <li>Once a username is confirmed, a weak password is often the only thing left to guess.</li>
+    <li>Rate limiting and lockouts add a second layer of defence.</li>
+    <li>Small wordlists and a little patience are often all an attacker needs against a weak setup.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> You've now completed four rooms along the beginner path. Try access control next, where you'll look at what happens after login, not just how you get in.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/login-enumeration.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

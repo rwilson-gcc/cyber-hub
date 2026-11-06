@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XOR, JWTs and hashes | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/xor-jwt-hashes.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="xor-jwt-hashes">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>XOR, JWTs and hashes</h1>
+    <p>Encoding hides nothing, ciphers hide data behind a key, hashes are one-way, and signatures prove nothing was changed. This room helps you tell them apart. Every token and message here is fictional.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Security is full of terms that sound similar but do different jobs. XOR is a simple operation that combines data with a key. A JSON Web Token (JWT) is a compact way of proving who you are to a website. A hash is a one-way fingerprint of some data. This room covers all three and shows what each one can and can&rsquo;t do.</p>
+  <h3>Why does it matter?</h3>
+  <p>Mixing these up causes real mistakes: believing a token&rsquo;s contents are private when they are only encoded, thinking a short XOR key is encryption, or storing passwords with a hash that is trivial to look up. Knowing which tool offers which guarantee is a core skill.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>JWTs carry your identity on many modern sites and APIs. Hashes are used to store passwords and to check files haven&rsquo;t changed. XOR is a building block inside real ciphers, and also a favourite for weak home-made schemes in malware.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>A hash is like a fingerprint: it identifies a person but you can&rsquo;t rebuild the person from it. A signature on a letter proves who wrote it and that nobody edited it, but anyone can still read the letter. Encryption is the sealed envelope.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only inspect tokens, hashes and data you are entitled to look at. Tampering with other people&rsquo;s tokens or cracking passwords you don&rsquo;t own is an offence under the Computer Misuse Act 1990. Everything in this room is fictional and generated in your browser.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain how XOR with a key works and why the same key reverses it.</li>
+    <li>Break single-byte XOR by trying every key.</li>
+    <li>Read the parts of a JWT and say what the signature does and doesn&rsquo;t protect.</li>
+    <li>Recognise common hash types from their length.</li>
+    <li>Tell encoding, encryption, hashing and signing apart.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: XOR with a key</h3>
+  <p>XOR compares two bits and gives 1 when they differ. Applying it between your data and a key scrambles the data, and applying the same key again restores it:</p>
+  <pre>data  XOR  key  =  scrambled
+scrambled  XOR  key  =  data     (same key undoes it)</pre>
+  <p>If the key is a single byte there are only 256 possibilities, so an attacker can try them all and look for readable text. XOR is only strong when the key is as long as the message, random and never reused, which is rarely true in home-made schemes.</p>
+  <fieldset>
+    <legend>Mini quiz: single-byte XOR</legend>
+    <p>A message was XORed with a single-byte key. Why is it easy to break?</p>
+    <label><input type="radio" name="q1" value="a"> There are only 256 possible keys to try</label>
+    <label><input type="radio" name="q1" value="b"> XOR cannot be reversed</label>
+    <label><input type="radio" name="q1" value="c"> The key is always 0</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 2: JSON Web Tokens</h3>
+  <p>A JWT has three parts joined by dots: a header, a payload and a signature. The header and payload are just JSON written in Base64URL, so anyone holding the token can read them. The signature is made using a secret that only the server knows, so if someone changes the payload the signature no longer matches and the server should reject the token.</p>
+  <pre>header.payload.signature</pre>
+  <div class="cols">
+    <div class="h1"><b>Header</b><p style="margin:.3rem 0 0">Says how the token is signed, for example HS256.</p></div>
+    <div class="v1"><b>Payload</b><p style="margin:.3rem 0 0">The claims: who the user is, their role, when it expires. Readable by anyone.</p></div>
+    <div class="p1"><b>Signature</b><p style="margin:.3rem 0 0">Proves the token wasn&rsquo;t changed. It does not hide anything.</p></div>
+  </div>
+  <fieldset>
+    <legend>Mini quiz: JWT contents</legend>
+    <p>Can someone who intercepts a signed JWT read its payload without knowing the server’s secret?</p>
+    <label><input type="radio" name="q2" value="a"> Yes. The payload is only Base64URL encoded</label>
+    <label><input type="radio" name="q2" value="b"> No. The signature encrypts it</label>
+    <label><input type="radio" name="q2" value="c"> No. The header locks it</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: hashes</h3>
+  <p>A hash function turns any input into a fixed-length fingerprint. The same input always gives the same hash, a tiny change gives a completely different one, and you can&rsquo;t turn a hash back into the input. You can often recognise the type from its length in hex characters:</p>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>Hash</th><th>Length in hex characters</th></tr></thead>
+    <tbody><tr><td>MD5</td><td>32</td></tr><tr><td>SHA-1</td><td>40</td></tr><tr><td>SHA-256</td><td>64</td></tr></tbody>
+  </table></div>
+  <p>MD5 and SHA-1 are old and fast, which is bad for passwords because attackers can try billions of guesses a second against stolen hashes. Passwords need a slow, salted hash such as bcrypt or Argon2.</p>
+
+  <h3>Idea 4: four tools, four jobs</h3>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>Tool</th><th>Needs a key?</th><th>Reversible?</th><th>Job</th></tr></thead>
+    <tbody>
+      <tr><td>Encoding</td><td>No</td><td>Yes, by anyone</td><td>Compatibility</td></tr>
+      <tr><td>Encryption</td><td>Yes</td><td>Yes, with the key</td><td>Confidentiality</td></tr>
+      <tr><td>Hashing</td><td>No</td><td>No</td><td>Fingerprints, password storage</td></tr>
+      <tr><td>Signing</td><td>Yes</td><td>Not applicable</td><td>Integrity and authenticity</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>glenfield-tickets.example</code>. After logging in, a tester finds this token in a cookie:</p>
+  <div class="card">
+    <pre>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbXkiLCJyb2xlIjoic3R1ZGVudCJ9.&hellip;signature&hellip;</pre>
+    <p>Splitting on the dots and decoding the first two parts as Base64URL gives readable JSON:</p>
+    <pre>{"alg":"HS256","typ":"JWT"}
+{"sub":"amy","role":"student"}</pre>
+    <p>The tester can read everything about the session without any secret. They then try changing <code>"role":"student"</code> to <code>"admin"</code>. A correctly built server recalculates the signature, sees it no longer matches, and rejects the token. A server that forgets to check the signature would accept it, which is a real and serious class of bug.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>You have been given a lab bundle from a fictional portal, <code>harbourview-portal.example</code>: a session token, three leaked password hashes and a message hidden with XOR. Use the three tools underneath to inspect each item. Everything is generated in your browser.</p>
+
+  <div class="browser" role="region" aria-label="Lab bundle">
+    <div class="bar"><span aria-hidden="true">lab-bundle.txt</span></div>
+    <div class="screen">
+      <p class="lab">Session token</p><pre id="item-jwt"></pre>
+      <p class="lab">Leaked hashes (all three are the same password)</p>
+      <pre>Hash A: <span id="item-ha"></span>
+Hash B: <span id="item-hb"></span>
+Hash C: <span id="item-hc"></span></pre>
+      <p class="lab">Hidden message (hex, single-byte XOR)</p><pre id="item-xor"></pre>
+    </div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Tool 1: token decoder</h3>
+    <label for="jwt-in">Paste a token</label>
+    <input type="text" id="jwt-in" autocomplete="off" spellcheck="false">
+    <div class="row"><button type="button" class="alt" id="jwt-go">Decode token</button></div>
+    <pre id="jwt-out" aria-live="polite">Output appears here.</pre>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Tool 2: hash recogniser</h3>
+    <label for="hash-in">Paste a hash</label>
+    <input type="text" id="hash-in" autocomplete="off" spellcheck="false">
+    <div class="row"><button type="button" class="alt" id="hash-go">Identify hash</button></div>
+    <pre id="hash-out" aria-live="polite">Output appears here.</pre>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Tool 3: XOR</h3>
+    <label for="xor-in">Hex data</label>
+    <input type="text" id="xor-in" autocomplete="off" spellcheck="false">
+    <div class="row">
+      <label for="xor-key" style="margin:0">Key (0-255)</label>
+      <input type="text" id="xor-key" autocomplete="off" inputmode="numeric" style="flex:0 1 90px">
+      <button type="button" class="alt" id="xor-run">XOR with key</button>
+      <button type="button" id="xor-all">Try all 256 keys</button>
+    </div>
+    <pre id="xor-out" aria-live="polite">Output appears here.</pre>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: read the token (easy)</h3>
+    <p>Paste the session token into the token decoder. Which role does the payload give this user?</p>
+    <div class="row"><label for="a1" style="margin:0">Role</label><input type="text" id="a1" autocomplete="off" spellcheck="false"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 2: what the signature does (easy&ndash;medium)</h3>
+    <p>Suppose an attacker changes the role in the payload to <code>admin</code> but doesn&rsquo;t know the server&rsquo;s secret. Which of the three parts of the token should make the server reject it: header, payload or signature?</p>
+    <div class="row"><label for="a2" style="margin:0">Token part</label><input type="text" id="a2" autocomplete="off" spellcheck="false"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 3: identify the hash (medium)</h3>
+    <p>Use the hash recogniser on Hashes A, B and C. They are the same password hashed three different ways. Which hash, A, B or C, is SHA-256?</p>
+    <div class="row"><label for="a3" style="margin:0">Hash letter</label><input type="text" id="a3" autocomplete="off" spellcheck="false"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 4: break the XOR (harder)</h3>
+    <p>The hidden message was XORed with a single-byte key. Paste the hex into the XOR tool and try all 256 keys, then read the one that makes sense. The message contains the flag: submit it below. What key (0-255) was used?</p>
+    <div class="row"><label for="a4" style="margin:0">Key</label><input type="text" id="a4" autocomplete="off" spellcheck="false"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. What could you learn from the token without knowing any secret? Why might that matter?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>The payload shows the user, role and other claims in plain JSON. Anyone who intercepts the token learns that, so sensitive data should never be put in a JWT payload.</p></details></div>
+  <div class="card"><label for="r2">2. Explain what the signature protects against and what it does not.</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>It protects integrity: any change to the header or payload makes the signature fail. It does not provide confidentiality, since the payload is still readable.</p></details></div>
+  <div class="card"><label for="r3">3. Why are MD5 and SHA-1 poor choices for storing passwords, even though they are one-way?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>They are fast, so attackers can test enormous numbers of guesses per second, and unsalted hashes can be looked up in precomputed tables. Passwords need slow, salted hashing such as bcrypt, scrypt or Argon2.</p></details></div>
+  <div class="card"><label for="r4">4. Why was the single-byte XOR so easy to break, and what would make XOR genuinely strong?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Only 256 keys exist, and the result is obviously readable when correct. XOR is only secure as a one-time pad: a truly random key as long as the message and never reused.</p></details></div>
+  <div class="card"><label for="r5">5. Match each to a job: encoding, encryption, hashing, signing. Give one real example of each.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Encoding: Base64 for attachments. Encryption: AES for files or HTTPS traffic. Hashing: bcrypt for stored passwords. Signing: a JWT signature or a software update signature.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>XOR is reversible with the same key, and a single-byte key is trivial to brute force.</li>
+    <li>A JWT is signed, not hidden: anyone can read its payload.</li>
+    <li>A signature protects integrity, not confidentiality.</li>
+    <li>Hash type can often be recognised from length, but fast hashes are poor for passwords.</li>
+    <li>Encoding, encryption, hashing and signing are four different tools with four different jobs.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> That completes Path 2: encoding, ciphers, XOR, tokens and hashes. More paths will build on these ideas. Head back to the <a href="../index.html">hub</a> to tick this room off.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/xor-jwt-hashes.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cyber Security Learning Hub | Glasgow Clyde College</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/hub.css">
+<link rel="stylesheet" href="css/learner.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="index.html"><img src="img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Cyber security learning hub</h1>
+    <p>A set of short, self-contained rooms for practising ethical hacking fundamentals safely. Work through them in order, capture a flag in each, and download the evidence file to submit on Canvas.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#path1">Path 1: Web &amp; access fundamentals</a></li>
+    <li><a href="#path2">Path 2: Encoding &amp; cryptography</a></li>
+    <li><a href="#future">Future paths</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="how" aria-labelledby="how-h"><div class="wrap">
+  <h2 id="how-h">How each room works</h2>
+  <p class="lede">Every room follows the same shape, so once you know one, you know them all. Each one is a single page: no installs, no accounts, nothing to configure.</p>
+  <ol class="flow" aria-label="Room structure">
+    <li><b>1. Learn</b>A short, beginner-friendly theory section with analogies and a mini quiz.</li>
+    <li><b>2. Practise</b>A safe, simulated target site with tasks that build in difficulty.</li>
+    <li><b>3. Capture</b>Decode or discover a flag and submit it for instant feedback.</li>
+    <li><b>4. Evidence</b>Download a results file with your answers and flag status for Canvas.</li>
+  </ol>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Before you start</h3>
+    <p style="margin:0">Every target in every room is fictional and fully simulated in your browser. Only ever test real systems you own or have explicit permission to test &mdash; accessing real systems without authorisation is a criminal offence under the Computer Misuse Act 1990.</p>
+  </div>
+</div></section>
+
+<section id="path1" aria-labelledby="p1-h"><div class="wrap">
+  <div class="path-head">
+    <h2 id="p1-h" style="margin-bottom:0">Path 1: web &amp; access fundamentals</h2>
+    <p>Beginner → Intermediate &middot; 6 live rooms, more paths on the way</p>
+  </div>
+  <p class="lede">Start at Room 1 and work down. Each room hands off to the next, and later rooms assume you've met the ideas from earlier ones.</p>
+
+  <div class="card" aria-label="Your progress in this browser">
+    <div class="progress-wrap">
+      <strong id="hub-prog-text">Progress: 0 of 9 rooms marked complete</strong>
+      <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0" aria-labelledby="hub-prog-text"><div id="hub-bar"></div></div>
+    </div>
+    <p style="margin:.6rem 0 0;font-size:.85rem">Your progress is saved to your learner ID (top right), so it follows you between devices. A room ticks itself when you capture its flag, and you can tick or untick any box yourself. For a record of your actual answers, use each room's own "Download evidence file" button.</p>
+  </div>
+
+  <div class="grid">
+    <article class="room" data-room="recon-101">
+      <span class="num" aria-hidden="true">1</span>
+      <h3>Recon 101: follow the breadcrumbs</h3>
+      <p>Read page source, check robots.txt, spot a directory listing and decode Base64.</p>
+      <div class="tags"><span class="tag">Beginner</span><span class="tag">~25 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/recon-101.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="recon-101"> Done</label>
+      </div>
+    </article>
+
+    <article class="room" data-room="http-headers">
+      <span class="num" aria-hidden="true">2</span>
+      <h3>HTTP headers: what your browser isn't telling you</h3>
+      <p>Status codes, information-leaking headers, missing security headers, and a hidden encoded value.</p>
+      <div class="tags"><span class="tag">Beginner</span><span class="tag">~25 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/http-headers.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="http-headers"> Done</label>
+      </div>
+    </article>
+
+    <article class="room" data-room="cookies-sessions">
+      <span class="num" aria-hidden="true">3</span>
+      <h3>Cookies &amp; sessions: the trust you carry in your pocket</h3>
+      <p>Cookie attributes, predictable session IDs, and why encoding isn't the same as protecting data.</p>
+      <div class="tags"><span class="tag">Beginner–Intermediate</span><span class="tag">~25 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/cookies-sessions.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="cookies-sessions"> Done</label>
+      </div>
+    </article>
+
+    <article class="room" data-room="login-enumeration">
+      <span class="num" aria-hidden="true">4</span>
+      <h3>Login enumeration: when error messages talk too much</h3>
+      <p>Spot a username-enumeration leak, then combine it with a weak password to get in.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~25 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/login-enumeration.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="login-enumeration"> Done</label>
+      </div>
+    </article>
+
+    <article class="room" data-room="access-control">
+      <span class="num" aria-hidden="true">5</span>
+      <h3>Access control: who's allowed to see what</h3>
+      <p>Horizontal vs vertical privilege escalation, an IDOR, and forced browsing into an unprotected admin page.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/access-control.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="access-control"> Done</label>
+      </div>
+    </article>
+
+    <article class="room" data-room="sql-injection">
+      <span class="num" aria-hidden="true">6</span>
+      <h3>SQL injection: when input becomes instruction</h3>
+      <p>Break a query with a quote, bypass a login, count columns and use UNION to read a hidden table, all in a simulation.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/sql-injection.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="sql-injection"> Done</label>
+      </div>
+    </article>
+  </div>
+</div></section>
+
+<section id="path2" aria-labelledby="p2-h"><div class="wrap">
+  <div class="path-head">
+    <h2 id="p2-h" style="margin-bottom:0">Path 2: encoding &amp; cryptography basics</h2>
+    <p>Beginner → Intermediate &middot; 3 live rooms</p>
+  </div>
+  <p class="lede">Once Path 1 is finished, this path teaches you to recognise and reverse the ways data gets disguised, and to tell the difference between hiding data and protecting it. Start at Room 1 and work down, just like Path 1.</p>
+
+  <div class="grid">
+    <article class="room" data-room="encoding-basics">
+      <span class="num" aria-hidden="true">1</span>
+      <h3>Encoding: Base64, hex and friends</h3>
+      <p>Recognise common encodings on sight, decode them by hand and by tool, and see why encoding is not encryption.</p>
+      <div class="tags"><span class="tag">Beginner</span><span class="tag">~25 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/encoding-basics.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="encoding-basics"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="classical-ciphers">
+      <span class="num" aria-hidden="true">2</span>
+      <h3>Classical ciphers: ROT13 and Caesar</h3>
+      <p>Shift ciphers, frequency clues and brute-forcing a small key space.</p>
+      <div class="tags"><span class="tag">Beginner</span><span class="tag">~25 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/classical-ciphers.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="classical-ciphers"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="xor-jwt-hashes">
+      <span class="num" aria-hidden="true">3</span>
+      <h3>XOR, JWTs and hashes</h3>
+      <p>Reading XOR-masked data, inspecting a JSON Web Token, and telling common hash types apart.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/xor-jwt-hashes.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="xor-jwt-hashes"> Done</label>
+      </div>
+    </article>
+  </div>
+</div></section>
+
+<section id="future" aria-labelledby="fut-h" style="border-bottom:0"><div class="wrap future">
+  <div class="path-head">
+    <h2 id="fut-h" style="margin-bottom:0">Future paths</h2>
+    <p>More rooms are being built &mdash; this hub will grow to link them here</p>
+  </div>
+
+  <div class="construction" role="img" aria-label="Under construction: these paths are not available yet">
+    <span class="cone" aria-hidden="true">&#9888;</span>
+    <span class="construction-text">Under construction</span>
+    <span class="cone" aria-hidden="true">&#9888;</span>
+  </div>
+
+  <p class="lede">Nothing below is live yet. It&rsquo;s here so the hub has a home for each path as it&rsquo;s published.</p>
+
+  <div class="grid">
+    <article class="room soon">
+      <span class="num" aria-hidden="true">3</span>
+      <h3>Path 3: injection &amp; input validation</h3>
+      <p>Cross-site scripting, deeper injection techniques, and secure coding fixes (building on Room 6 above).</p>
+      <div class="tags"><span class="tag">Coming soon</span></div>
+    </article>
+    <article class="room soon">
+      <span class="num" aria-hidden="true">4</span>
+      <h3>Path 4: client-side &amp; business logic</h3>
+      <p>Client-side storage and validation bypass, CSRF, file upload weaknesses and business logic flaws.</p>
+      <div class="tags"><span class="tag">Coming soon</span></div>
+    </article>
+    <article class="room soon">
+      <span class="num" aria-hidden="true">5</span>
+      <h3>Path 5: OSINT &amp; steganography</h3>
+      <p>Open-source investigation techniques and hidden-data challenges, CTF-style.</p>
+      <div class="tags"><span class="tag">Coming soon</span></div>
+    </article>
+    <article class="room soon">
+      <span class="num" aria-hidden="true">6</span>
+      <h3>Path 6: APIs &amp; server misconfiguration</h3>
+      <p>API authorisation flaws, exposed backups, verbose errors and other common misconfigurations.</p>
+      <div class="tags"><span class="tag">Coming soon</span></div>
+    </article>
+    <article class="room soon">
+      <span class="num" aria-hidden="true">7</span>
+      <h3>Final boss: capture-the-flag scenario</h3>
+      <p>A multi-step challenge chaining skills from every path into one longer investigation.</p>
+      <div class="tags"><span class="tag">Coming soon</span></div>
+    </article>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING HUB</p><p class="lcs"><img src="img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="js/config.js"></script>
+<script src="js/learner.js"></script>
+<script src="js/hub.js"></script>
+</body>
+</html>

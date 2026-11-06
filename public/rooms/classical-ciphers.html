@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classical ciphers: ROT13 and Caesar | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/classical-ciphers.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="classical-ciphers">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Classical ciphers: ROT13 and Caesar</h1>
+    <p>Unlike encoding, a cipher really does scramble a message. But a weak one only slows readers down. This room shows you how shift ciphers work and how quickly they fall. Every message here is fictional.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>A cipher scrambles a message using a method and a key. The Caesar cipher, said to be used by Julius Caesar, is one of the oldest: every letter is moved a fixed number of places along the alphabet. ROT13 is the same idea with the shift fixed at 13.</p>
+  <h3>Why does it matter?</h3>
+  <p>These ciphers are far too weak for real use, but they teach the idea that matters most in cryptography: a cipher is only as strong as the number of keys an attacker would have to try, and whether the message leaves patterns behind. They also still appear in puzzles, CTFs and as a lazy way of hiding spoilers or obscuring text.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>ROT13 is used to hide puzzle answers on forums. Malware and badly designed software sometimes use simple shifts or substitutions on strings, believing it hides them. Seeing why those fail prepares you for the modern ciphers that don&rsquo;t.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine a padlock with only 25 possible combinations. Anyone willing to spend a few minutes can try them all. The lock looks like protection, but it is only a delay.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only try to break messages you are entitled to read. Intercepting or decrypting other people&rsquo;s communications without permission is an offence under the Computer Misuse Act 1990 and other laws. The messages here are fictional and made in your browser.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain how a Caesar shift and ROT13 work.</li>
+    <li>Encode and decode a message with a known shift.</li>
+    <li>Break an unknown shift by trying every possible key.</li>
+    <li>Use letter frequency to recognise a shifted message.</li>
+    <li>Explain why a small key space makes a cipher weak.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: shifting the alphabet</h3>
+  <p>A Caesar cipher replaces each letter with the one a fixed number of places further on, wrapping round from Z back to A. The number of places is the key. Here is a shift of 3:</p>
+  <pre>Plain:   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+Cipher:  D E F G H I J K L M N O P Q R S T U V W X Y Z A B C
+
+HELLO  becomes  KHOOR</pre>
+  <p>Only letters move. Spaces, digits and punctuation stay exactly as they were, which leaves clues for anyone reading.</p>
+  <ol class="flow" aria-label="How a shift works">
+    <li><b>1. Pick a key</b>A number from 1 to 25.</li>
+    <li><b>2. Shift</b>Move every letter that many places.</li>
+    <li><b>3. Send</b>The message looks like nonsense.</li>
+    <li><b>4. Shift back</b>The receiver reverses the shift.</li>
+  </ol>
+
+  <h3>Idea 2: ROT13</h3>
+  <p>ROT13 is a Caesar cipher with a shift of 13. The alphabet has 26 letters, so shifting by 13 twice lands you exactly back where you started. That means ROT13 is its own inverse: the same operation encodes and decodes.</p>
+  <fieldset>
+    <legend>Mini quiz: ROT13 twice</legend>
+    <p>What do you get if you apply ROT13 to a message, and then apply ROT13 to the result?</p>
+    <label><input type="radio" name="q1" value="a"> The original message</label>
+    <label><input type="radio" name="q1" value="b"> A shift of 26, which is unreadable</label>
+    <label><input type="radio" name="q1" value="c"> A completely different cipher text</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: breaking a shift cipher</h3>
+  <p>There are only 25 useful keys. An attacker simply tries all of them and reads the one that makes sense, which takes seconds by hand and no time at all by computer. If the message is long enough, there is a second route: in English the most common letter is usually <b>E</b>. Whichever letter appears most in the cipher text is probably E after the shift, and the gap between them gives the key.</p>
+  <fieldset>
+    <legend>Mini quiz: why is it weak?</legend>
+    <p>Why is a Caesar cipher easy to break?</p>
+    <label><input type="radio" name="q2" value="a"> There are only 25 possible keys to try</label>
+    <label><input type="radio" name="q2" value="b"> It needs a very powerful computer</label>
+    <label><input type="radio" name="q2" value="c"> It uses a very long random key</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 4: what makes modern ciphers different</h3>
+  <p>Modern ciphers such as AES use keys with an astronomically large number of possibilities, and they hide letter patterns. They also follow a rule called Kerckhoffs&rsquo;s principle: the method can be public, and security rests only on the key. A Caesar cipher fails on both counts.</p>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example. A member of a fictional club, <code>clyde-canoe-club.example</code>, sends a message shifted by 3:</p>
+  <div class="card">
+    <pre>PHHW DW QRRQ</pre>
+    <p>An attacker who doesn&rsquo;t know the key tries every shift. Each attempt produces a line of text:</p>
+    <pre>shift  1:  OGGV CV PQQP
+shift  2:  NFFU BU OPPO
+shift  3:  MEET AT NOON   &larr; readable
+shift  4:  LDDS ZS MNNM</pre>
+    <p>Only one line is readable English, so that is the key. The whole attack needed no cleverness at all, only patience. A computer does it instantly.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Four messages have been intercepted from a fictional orienteering club, <code>lochside-orienteers.example</code>. Each one was shifted with a different key. Use the cipher workbench to read them. Everything is generated in your browser.</p>
+
+  <div class="browser" role="region" aria-label="Intercepted messages">
+    <div class="bar"><span aria-hidden="true">intercepted-notes.txt</span></div>
+    <div class="screen">
+      <p class="lab">Message 1 (a standard cipher with a fixed shift)</p><pre id="msg-1"></pre>
+      <p class="lab">Message 2</p><pre id="msg-2"></pre>
+      <p class="lab">Message 3 (a longer message)</p><pre id="msg-3"></pre>
+      <p class="lab">Message 4</p><pre id="msg-4"></pre>
+    </div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Cipher workbench</h3>
+    <label for="cw-in">Paste a message here</label>
+    <textarea id="cw-in" spellcheck="false"></textarea>
+    <div class="row">
+      <label for="cw-shift" style="margin:0">Shift (1-25)</label>
+      <input type="text" id="cw-shift" autocomplete="off" inputmode="numeric" style="flex:0 1 90px" value="13">
+      <button type="button" class="alt" id="cw-fwd">Shift forward</button>
+      <button type="button" class="alt" id="cw-back">Shift back</button>
+    </div>
+    <div class="row">
+      <button type="button" id="cw-all">Try all 25 shifts</button>
+      <button type="button" id="cw-freq">Count letters</button>
+    </div>
+    <pre id="cw-out" aria-live="polite">Output appears here.</pre>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: a fixed shift (easy)</h3>
+    <p>Message 1 was shifted by 13, the shift that undoes itself. Decode it. Where will the club meet?</p>
+    <div class="row"><label for="a1" style="margin:0">Meeting place</label><input type="text" id="a1" autocomplete="off" spellcheck="false"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 2: an unknown shift (easy&ndash;medium)</h3>
+    <p>Message 2 was shifted forward by an unknown number of places. Find the shift that makes it readable. What number did the sender use?</p>
+    <div class="row"><label for="a2" style="margin:0">Shift used</label><input type="text" id="a2" autocomplete="off" spellcheck="false"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 3: letter frequency (medium)</h3>
+    <p>Message 3 is a long Caesar-shifted message. Use <b>Count letters</b> on it. Which letter appears most often in the cipher text?</p>
+    <div class="row"><label for="a3" style="margin:0">Most common letter</label><input type="text" id="a3" autocomplete="off" spellcheck="false"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 4: brute force (harder)</h3>
+    <p>Message 4 contains the flag. Try every possible shift and read the one that makes sense, then submit the flag below. How many different shifts are there to try, not counting a shift of 0?</p>
+    <div class="row"><label for="a4" style="margin:0">Number of shifts</label><input type="text" id="a4" autocomplete="off" spellcheck="false"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. How did you decide which shift to use for Message 2? What made one result stand out?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Trying every shift produces 25 candidates, and only one is readable English. A human (or a program that scores English) recognises it immediately.</p></details></div>
+  <div class="card"><label for="r2">2. Why does counting letters help break Message 3, and why wouldn’t it work as well on a very short message?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>A Caesar shift moves every letter by the same amount, so letter frequencies are preserved just relabelled. The most common cipher letter is probably E, and that reveals the shift. Short messages don’t have enough letters for the pattern to emerge reliably.</p></details></div>
+  <div class="card"><label for="r3">3. What does "key space" mean, and how big is it for a Caesar cipher compared with a modern cipher?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Key space is the number of possible keys. A Caesar cipher has 25. AES-128 has about 3.4 × 10^38, which is far too many to try by brute force.</p></details></div>
+  <div class="card"><label for="r4">4. Kerckhoffs’s principle says a cipher should stay secure even if everyone knows the method. Does a Caesar cipher meet that? Why or why not?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>No. Once you know the method is a shift, the only secret is a number between 1 and 25, which can be guessed. A good cipher stays secure with the method public and only the key secret.</p></details></div>
+  <div class="card"><label for="r5">5. Name a place where weak "scrambling" like this could still appear in real software, and what should be used instead.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: obfuscated passwords or API keys in app code or config files. They should be removed from the code, kept in a secrets manager, and, where data needs protecting, encrypted with a modern algorithm and properly managed keys.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>A Caesar cipher shifts every letter by a fixed key, and ROT13 is the special case of 13.</li>
+    <li>With only 25 keys, brute force breaks it instantly.</li>
+    <li>Letter frequencies survive the shift, so long messages give themselves away.</li>
+    <li>Security should rest on a huge key space, not on keeping the method secret.</li>
+    <li>Modern ciphers like AES fix both weaknesses, which is why we use them instead.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="xor-jwt-hashes.html">XOR, JWTs and hashes</a>, where you meet tools that look like cryptography and learn which ones actually protect data.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/classical-ciphers.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>
