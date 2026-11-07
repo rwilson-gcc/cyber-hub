@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cross-site scripting: when the page runs your input | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/xss-script-injection.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="xss-script-injection">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Cross-site scripting: when the page runs your input</h1>
+    <p>Injection isn’t only for databases. When a page writes your input back without encoding it, the browser can’t tell your words from its own instructions. This room is a complete simulation: nothing you type here is ever executed.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>A web page is built from HTML, and the browser treats some characters as special: <code>&lt;</code> starts a tag, and inside a tag a <code>&lt;script&gt;</code> block or an event attribute like <code>onerror</code> can run JavaScript. If a site takes your input and writes it straight into the page without encoding those characters, the browser can&rsquo;t tell your text from the page&rsquo;s own code. This is cross-site scripting, or XSS.</p>
+  <h3>Why does it matter?</h3>
+  <p>A script running on someone else&rsquo;s page runs with that page&rsquo;s privileges: it can read cookies, submit forms as the victim, redirect them, or quietly change what they see. It is the browser-side twin of the SQL injection you met earlier: input became instruction.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>XSS consistently appears in the most commonly reported web vulnerabilities. Comment boxes, search bars, profile fields and URL parameters are classic entry points, especially on sites that were never reviewed for it.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine a noticeboard where anyone can pin a note, and the office reads every note aloud over the tannoy. A normal note gets read as text. A note that says &ldquo;ALSO: unlock the stationery cupboard&rdquo; gets read as an instruction too, because the reader can&rsquo;t tell notice from command. Encoding is teaching the reader to always say &ldquo;the note says&rdquo; first.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal, and a safety note</h3>
+    <p>Only test for XSS on systems you own or have written permission to test. Doing this on a real site without authorisation is a criminal offence under the Computer Misuse Act 1990. Nothing in this room executes real code: payloads are analysed as text by a simulator, never run, so you can experiment freely.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain what makes cross-site scripting possible.</li>
+    <li>Tell reflected, stored and DOM-based XSS apart.</li>
+    <li>Recognise why the same input is safe in one place and dangerous in another.</li>
+    <li>Use a browser-level simulator to see what a vulnerable page would do with a payload, safely.</li>
+    <li>Explain which defences actually prevent XSS and which only make it harder.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: output, not input, is where the damage happens</h3>
+  <p>The danger isn&rsquo;t that a user typed <code>&lt;script&gt;</code>. It&rsquo;s that the page later wrote that text into HTML without encoding it. Encoding turns the special characters into harmless text equivalents:</p>
+  <pre>Input:    &lt;script&gt;alert(1)&lt;/script&gt;
+Unsafe:   &lt;script&gt;alert(1)&lt;/script&gt;        <span class="bad">&larr; browser runs it</span>
+Encoded:  &amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;  <span class="c">&larr; browser shows it as text</span></pre>
+  <p>The same input, written to the same page, is dangerous or harmless depending entirely on whether the output was encoded for where it landed.</p>
+
+  <h3>Idea 2: three kinds of XSS</h3>
+  <div class="cols">
+    <div class="h1"><b>Reflected</b><p style="margin:.3rem 0 0">Your input comes straight back in the response, usually from a search box or a URL parameter. It only affects whoever is tricked into clicking a crafted link.</p></div>
+    <div class="v1"><b>Stored</b><p style="margin:.3rem 0 0">Your input is saved (a comment, a profile field) and served to every later visitor. One post can affect everyone who reads it.</p></div>
+    <div class="p1"><b>DOM-based</b><p style="margin:.3rem 0 0">No server involved: client-side JavaScript reads something like the URL and writes it into the page itself, usually with <code>innerHTML</code>.</p></div>
+  </div>
+  <fieldset>
+    <legend>Mini quiz: which kind?</legend>
+    <p>A comment left on a public blog post contains a hidden payload. Every visitor who later reads that post is affected. What kind of XSS is this?</p>
+    <label><input type="radio" name="q1" value="a"> Stored</label>
+    <label><input type="radio" name="q1" value="b"> Reflected</label>
+    <label><input type="radio" name="q1" value="c"> DOM-based</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: context changes everything</h3>
+  <p>The same character needs different encoding depending on where it lands. Text inside a tag, an HTML attribute, and a block of JavaScript each have different special characters, so a single generic filter is never enough:</p>
+  <pre>In HTML body:       &lt;p&gt;USER_INPUT&lt;/p&gt;              encode &lt; &gt; &amp;
+In an attribute:    &lt;img alt="USER_INPUT"&gt;         also encode " and '
+Inside JavaScript:  var name = "USER_INPUT";        needs JS-string encoding, not HTML encoding</pre>
+  <fieldset>
+    <legend>Mini quiz: the real fix</legend>
+    <p>Which approach best prevents XSS?</p>
+    <label><input type="radio" name="q2" value="a"> Encode output for the exact context it is written into</label>
+    <label><input type="radio" name="q2" value="b"> Block the word "script" from user input</label>
+    <label><input type="radio" name="q2" value="c"> Only allow input under 100 characters</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 4: defence in depth</h3>
+  <p>No single defence is perfect alone, so good sites layer several:</p>
+  <ul class="tick">
+    <li><b>Output encoding</b> for the context (HTML, attribute, JavaScript, URL) &mdash; the actual fix.</li>
+    <li><b>Safe APIs</b> like <code>textContent</code> instead of <code>innerHTML</code>, so there is no HTML to misinterpret.</li>
+    <li><b>Content Security Policy (CSP)</b>, which can stop injected scripts from running even if one slips through.</li>
+    <li><b><code>HttpOnly</code> cookies</b>, so even a successful script can&rsquo;t read the session cookie.</li>
+  </ul>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>lochview-guestbook.example</code>. Its search box writes your query straight back onto the page:</p>
+  <div class="card">
+    <pre>Request:   /search?q=badges
+Response:  &lt;p&gt;You searched for: badges&lt;/p&gt;</pre>
+    <p>A tester tries a payload instead of a normal search term:</p>
+    <pre>Request:   /search?q=&lt;img src=x onerror=alert(document.cookie)&gt;
+Response:  &lt;p&gt;You searched for: <span class="inj">&lt;img src=x onerror=alert(document.cookie)&gt;</span>&lt;/p&gt;</pre>
+    <p>The browser tries to load an image from a URL that doesn&rsquo;t exist, fails, and runs the <code>onerror</code> handler &mdash; which is JavaScript, supplied entirely by the attacker. A crafted link containing this query, sent to a victim who is logged in, would run with their session. The fix is a one-line change: encode <code>q</code> before writing it into the page.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is the simulated <code>lochview-guestbook.example</code>, which has a vulnerable search box (reflected) and a guestbook comment form (stored). A page renderer shows you exactly what a real browser would do with each payload, worked out by pattern-matching only: nothing you type is ever executed on this page.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated website">
+    <div class="bar"><span aria-hidden="true">lochview-guestbook.example</span></div>
+    <div class="screen">
+      <div class="site-grid">
+        <div class="site-panel">
+          <h3>Search the site</h3>
+          <label for="xq">Search</label>
+          <div class="row"><input type="text" id="xq" autocomplete="off" spellcheck="false" placeholder="e.g. badges"><button type="button" class="alt" id="xq-go">Search</button></div>
+          <div id="xq-out" aria-live="polite"></div>
+        </div>
+        <div class="site-panel">
+          <h3>Leave a comment</h3>
+          <label for="xc">Your comment</label>
+          <div class="row"><input type="text" id="xc" autocomplete="off" spellcheck="false" placeholder="Great site!"><button type="button" class="alt" id="xc-go">Post</button></div>
+          <div id="xc-out" aria-live="polite"></div>
+          <p style="margin:.6rem 0 0;font-size:.85rem">Guestbook (visible to every later visitor):</p>
+          <div id="xc-board" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Defences</h3>
+    <p style="margin:.2rem 0 .6rem">Turn these on and try your payloads again to see what each one actually stops.</p>
+    <label><input type="checkbox" id="def-encode"> Output encoding</label>
+    <label><input type="checkbox" id="def-httponly"> HttpOnly cookies</label>
+    <label><input type="checkbox" id="def-csp"> Content Security Policy</label>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: find the unencoded reflection (easy)</h3>
+    <p>Search for a word containing an angle bracket, such as <code>&lt;b&gt;test&lt;/b&gt;</code>. Look at the simulated output. Is the search box&rsquo;s output encoded or not?</p>
+    <div class="row"><label for="a1" style="margin:0">Type: encoded or not encoded</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: get a payload to fire (easy&ndash;medium)</h3>
+    <p>Search for <code>&lt;img src=x onerror=alert(1)&gt;</code>. The simulator will report whether this would execute. Which HTML attribute made it run without needing a real <code>&lt;script&gt;</code> tag?</p>
+    <div class="row"><label for="a2" style="margin:0">Attribute name</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: make it persist (medium)</h3>
+    <p>Post the same payload as a comment instead of a search. Which is worse for the site&rsquo;s other visitors: this, or the reflected version in Task 2?</p>
+    <div class="row"><label for="a3" style="margin:0">stored or reflected</label><input type="text" id="a3" autocomplete="off"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: find the defence that actually works (harder)</h3>
+    <p>Turn each defence checkbox on one at a time and re-run your Task 2 payload in the search box after each change. Which single defence stops the payload from executing, rather than only limiting the damage if it does?</p>
+    <div class="row"><label for="a4" style="margin:0">Defence name</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Why was the same bracket character safe in Task 1 before you searched, but dangerous once the page wrote your search term back unencoded?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Characters are only dangerous in the context the browser is reading them in. Unencoded, a < is read as the start of a tag; encoded, it is read as the text character "<". The data didn’t change; the output handling did.</p></details></div>
+  <div class="card"><label for="r2">2. Why does the onerror attribute work as a way to run script, when there’s no &lt;script&gt; tag anywhere?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>HTML event attributes like onerror, onload and onclick can contain JavaScript directly. The browser doesn’t require a &lt;script&gt; tag specifically; it just needs somewhere it recognises as code.</p></details></div>
+  <div class="card"><label for="r3">3. Why is stored XSS generally treated as more serious than reflected XSS?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Reflected XSS needs the victim to click a specific crafted link and only fires once. Stored XSS runs automatically for every visitor who views the affected page, with no link or trick required each time.</p></details></div>
+  <div class="card"><label for="r4">4. Which defence in Task 4 actually stopped the script, and which of the others only limits the damage if a script does run? Explain the difference.</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Output encoding (or a working CSP) stops the script executing in the first place. HttpOnly cookies don’t stop the script running; they only stop a script that does run from reading the session cookie. Both matter, but they do different jobs.</p></details></div>
+  <div class="card"><label for="r5">5. Name one real website feature (other than a guestbook) where unencoded output could lead to XSS, and what the fix would look like there.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: a user’s display name shown on a profile page, a product review, an error message that echoes back a search term. The fix is the same everywhere: encode the output for the context it’s written into, rather than trying to filter the input.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>XSS happens when unencoded input is written into a page the browser can execute.</li>
+    <li>Reflected XSS hits one victim per link; stored XSS hits every later visitor.</li>
+    <li>The same character is safe or dangerous depending on context: HTML body, attribute, or JavaScript.</li>
+    <li>Context-aware output encoding is the actual fix; filtering specific words is not.</li>
+    <li>HttpOnly cookies and CSP add real layers of defence, but they back up encoding rather than replace it.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="command-and-path-injection.html">Command and path injection</a>, where input ends up talking to the server’s operating system instead of its database or its browser.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/xss-script-injection.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

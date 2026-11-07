@@ -136,6 +136,7 @@ def clean_room_state(raw: Any) -> dict:
         raise HTTPException(422, "state must be an object")
     fields = {k: v[:4000] for k, v in list((raw.get("fields") or {}).items())[:60] if _key_ok(k) and isinstance(v, str)}
     radios = {k: v[:40] for k, v in list((raw.get("radios") or {}).items())[:20] if _key_ok(k) and isinstance(v, str)}
+    checks = {k: bool(v) for k, v in list((raw.get("checks") or {}).items())[:20] if _key_ok(k)}
     tasks = [t for t in (raw.get("tasks") or [])[:10] if isinstance(t, str) and t.isdigit() and len(t) <= 2]
     quizzes = [q for q in (raw.get("quizzes") or [])[:10] if _key_ok(q)]
     hints = raw.get("hints")
@@ -146,6 +147,7 @@ def clean_room_state(raw: Any) -> dict:
         "v": 1,
         "fields": fields,
         "radios": radios,
+        "checks": checks,
         "tasks": sorted(set(tasks), key=int),
         "quizzes": quizzes,
         "hints": hints,

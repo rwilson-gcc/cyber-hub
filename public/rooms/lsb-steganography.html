@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LSB steganography: hiding data in plain sight | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/lsb-steganography.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="lsb-steganography">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>LSB steganography: hiding data in plain sight</h1>
+    <p>Steganography hides data inside other data, so well that the carrier looks completely ordinary. This room uses genuine least-significant-bit steganography: real pixels, really modified, decoded by a tool you can inspect.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Steganography (from Greek, roughly "covered writing") hides a message inside something else so that the hiding itself isn&rsquo;t obvious. Unlike encryption, which makes data unreadable but visibly present, good steganography tries to make the hidden data invisible to anyone who isn&rsquo;t looking for it.</p>
+  <h3>Why does it matter?</h3>
+  <p>A common and simple technique is least-significant-bit (LSB) steganography: changing only the smallest bit of each colour value in an image. That change is too small for the human eye to notice, but a program reading the raw pixel data can recover whatever was hidden there, perfectly.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Steganography appears in digital watermarking (proving ownership of an image invisibly), in CTF competitions as a classic challenge type, and occasionally in real investigations, where it has been used to smuggle data past filters that only look at what a file appears to contain.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine a huge wall made of a million identical bricks, and someone turns exactly one brick a shade you&rsquo;d never notice without comparing it brick by brick to its neighbours. From a distance, the wall looks completely unchanged. Up close, with the right method, that one brick spells out a message.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">A note on these images</h3>
+    <p>The images in this room are real PNG files with a real message hidden in their pixel data, using a simple, documented scheme explained below. Everything is decoded entirely in your browser; nothing is uploaded anywhere.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain the idea behind least-significant-bit steganography.</li>
+    <li>Use a canvas-based tool to extract a real hidden message from an image.</li>
+    <li>Recognise that an image with nothing hidden looks the same as one that does.</li>
+    <li>Explain why LSB steganography is invisible to the eye but not to analysis.</li>
+    <li>Describe a real limitation of this technique.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: the least significant bit barely matters, visually</h3>
+  <p>Each pixel’s colour is usually stored as three numbers, 0 to 255, for red, green and blue. Changing a colour value by 1, its smallest possible step, shifts it by less than half a percent, completely imperceptible to the human eye.</p>
+  <pre>Red value:        200            201
+Binary:           11001000       11001001
+                          ^               ^
+                   least significant bit (LSB)</pre>
+  <p>Flipping just that last bit changes the stored number by at most 1, invisible on screen, but perfectly readable to software checking that exact bit.</p>
+
+  <h3>Idea 2: hiding a whole message, one bit per pixel</h3>
+  <p>A simple scheme hides one bit of the message in the LSB of one pixel’s red value, working through the image left to right, top to bottom. A short header (how many bytes are hidden) comes first, so the reader knows exactly how much to extract.</p>
+  <pre>Pixel 1 red LSB &rarr; bit 1
+Pixel 2 red LSB &rarr; bit 2
+Pixel 3 red LSB &rarr; bit 3   ...and so on, 8 bits making each character</pre>
+  <fieldset>
+    <legend>Mini quiz: why invisible?</legend>
+    <p>Why is changing only a pixel’s least significant bit invisible to the human eye?</p>
+    <label><input type="radio" name="q1" value="a"> It changes the stored colour value by at most 1 out of 255, far too small to see</label>
+    <label><input type="radio" name="q1" value="b"> Browsers automatically hide LSB changes</label>
+    <label><input type="radio" name="q1" value="c"> It only affects pixels outside the visible image area</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: an image with nothing hidden looks exactly the same</h3>
+  <p>There is no visual way to tell an image carrying a hidden LSB message apart from one that isn&rsquo;t: both display identically. The only way to know is to actually extract and check, which is exactly what the tool below does.</p>
+  <fieldset>
+    <legend>Mini quiz: spotting it</legend>
+    <p>Can you tell by looking at an image whether it contains an LSB-hidden message?</p>
+    <label><input type="radio" name="q2" value="a"> No. It looks identical either way; you have to extract and check</label>
+    <label><input type="radio" name="q2" value="b"> Yes, hidden images always look slightly blurry</label>
+    <label><input type="radio" name="q2" value="c"> Yes, hidden images are always a different file size</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 4: a real limitation</h3>
+  <p>Simple LSB steganography like this is fragile: re-saving an image in a lossy format (such as JPEG), resizing it, or running it through most image-processing pipelines destroys the hidden bits, because those processes don&rsquo;t preserve exact pixel values. It is also detectable with statistical analysis, since truly random-looking LSBs behave differently from a deliberately encoded message. Real steganographic tools use more robust techniques, but the core idea is the same one you are about to use.</p>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example. Two images look identical at a glance:</p>
+  <div class="card">
+    <pre>Image X: ordinary photo, nothing hidden
+Image Y: looks pixel-for-pixel identical on screen, but its red channel’s least
+         significant bits spell out a hidden note when extracted</pre>
+    <p>A tool reads Image Y pixel by pixel, takes the last bit of each red value in order, and reassembles them into bytes, then characters. The result: a message that was there all along, invisible until specifically extracted. Image X, run through the same tool, produces nothing readable: its LSBs are just ordinary image data with no deliberate pattern.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Three real PNG images are provided below. Use the extractor tool to check each one for a hidden message. The tool reads the image into a canvas and inspects the real pixel data: nothing is uploaded anywhere.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Extractor</h3>
+    <div class="row">
+      <label for="lsb-select" style="margin:0">Image</label>
+      <select id="lsb-select">
+        <option value="sample-a">Sample A</option>
+        <option value="sample-b">Sample B</option>
+        <option value="sample-c">Sample C</option>
+      </select>
+      <button type="button" class="alt" id="lsb-extract">Extract hidden data</button>
+    </div>
+    <img id="lsb-preview" src="../img/rooms/lsb-steganography/sample-a.png" alt="The currently selected sample image" width="240" height="160" style="border:2px solid var(--char);border-radius:10px;display:block;margin:.6rem 0">
+    <canvas id="lsb-canvas" width="300" height="200" style="display:none"></canvas>
+    <pre id="lsb-out">Choose an image and press Extract hidden data.</pre>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: check a clean image (easy)</h3>
+    <p>Select Sample A and extract. What does the tool report?</p>
+    <div class="row"><label for="a1" style="margin:0">found or not found</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: extract a hidden phrase (easy&ndash;medium)</h3>
+    <p>Select Sample B and extract. What phrase is hidden inside it?</p>
+    <div class="row"><label for="a2" style="margin:0">Hidden phrase</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: understand the limitation (medium)</h3>
+    <p>If Sample C were re-saved as a compressed JPEG and then converted back to PNG, would the hidden message in its pixels most likely survive?</p>
+    <div class="row"><label for="a3" style="margin:0">yes or no</label><input type="text" id="a3" autocomplete="off"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: extract the flag (harder)</h3>
+    <p>Select Sample C and extract. Type exactly what the tool reports as hidden data, then submit the same text as your flag below.</p>
+    <div class="row"><label for="a4" style="margin:0">Extracted message</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Sample A and Sample C look like completely ordinary generated images. What told you one had a hidden message and the other didn’t?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Only the extraction result. There was no visual difference at all; the tool reported "not found" for the clean image and a readable message for the ones carrying hidden data.</p></details></div>
+  <div class="card"><label for="r2">2. Describe in your own words how the extractor tool turned pixel colour values into readable text.</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>It read the least significant bit of the red value of each pixel in order, first 32 bits to get a message length, then 8 bits at a time to rebuild each character of the message, converting each group of 8 bits back into a letter.</p></details></div>
+  <div class="card"><label for="r3">3. Why does re-saving an image as a lossy JPEG usually destroy LSB-hidden data, even though the picture still looks almost identical afterwards?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>JPEG compression deliberately discards or approximates pixel detail that doesn’t noticeably affect how the image looks, which is exactly where the hidden bits were stored. The picture survives visually; the exact pixel values, and the hidden data with them, do not.</p></details></div>
+  <div class="card"><label for="r4">4. This room only modified the red channel’s LSB. How might using all three colour channels change how much could be hidden, and would it make the message harder to detect?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Using red, green and blue LSBs could roughly triple how much data fits in the same image. It wouldn’t meaningfully change detectability by eye, since each individual change is still tiny, but statistical detection methods could potentially notice patterns across all three channels rather than just one.</p></details></div>
+  <div class="card"><label for="r5">5. Name one legitimate use of steganography, separate from hiding a CTF flag.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: digital watermarking to prove ownership of an image without visibly marking it, embedding a tracking identifier to detect leaks of a confidential document, or research into robust data-hiding techniques for provenance tracking.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>LSB steganography hides data by changing only the smallest bit of each colour value.</li>
+    <li>A change that small is invisible to the eye but fully readable by a tool checking the right bits.</li>
+    <li>An image with hidden data looks pixel-identical on screen to one without.</li>
+    <li>Lossy compression and most image processing destroy simple LSB-hidden data.</li>
+    <li>The same idea (hiding data where it won’t be visually noticed) underlies both playful CTF challenges and real digital watermarking.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> That completes Path 5: OSINT and steganography. More paths will build on these ideas. Head back to the <a href="../index.html">hub</a> to tick this room off.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/lsb-stego-engine.js"></script>
+<script src="../js/rooms/lsb-steganography.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

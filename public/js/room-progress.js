@@ -43,11 +43,14 @@
 
   /* ---------- collect ---------- */
   function collect() {
-    var s = { v: 1, fields: {}, radios: {}, tasks: [], quizzes: [], hints: 0, dec: false, flag: { submitted: false, achieved: false } };
+    var s = { v: 1, fields: {}, radios: {}, checks: {}, tasks: [], quizzes: [], hints: 0, dec: false, flag: { submitted: false, achieved: false } };
     textFields().forEach(function (n) { if (n.value) s.fields[n.id] = n.value; });
 
     var radios = document.querySelectorAll('main input[type=radio]:checked');
     for (var i = 0; i < radios.length; i++) if (!inSim(radios[i])) s.radios[radios[i].name] = radios[i].value;
+
+    var boxes = document.querySelectorAll('main input[type=checkbox][id]');
+    for (var j = 0; j < boxes.length; j++) if (!inSim(boxes[j])) s.checks[boxes[j].id] = boxes[j].checked;
 
     document.querySelectorAll('button[data-task]').forEach(function (b) {
       var n = b.getAttribute('data-task'), fb = $('fb' + n);
@@ -85,6 +88,11 @@
     Object.keys(radios).forEach(function (name) {
       var r = document.querySelector('main input[type=radio][name="' + name + '"][value="' + radios[name] + '"]');
       if (r) r.checked = true;
+    });
+    var checksIn = s.checks || {};
+    Object.keys(checksIn).forEach(function (id) {
+      var n = $(id);
+      if (n && n.type === 'checkbox' && !!n.checked !== !!checksIn[id]) n.click();
     });
     (s.quizzes || []).forEach(function (id) { var b = $(id); if (b) b.click(); });
     (s.tasks || []).forEach(function (n) {

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File metadata: what a photo tells you besides the picture | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/file-metadata.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="file-metadata">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>File metadata: what a photo tells you besides the picture</h1>
+    <p>Every image file can carry information you never see on screen: who took it, what software made it, sometimes even where it was taken. This room uses two real image files with genuine embedded metadata, read entirely in your browser.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>A photo file usually contains more than pixels. Alongside the image data, many formats carry a block of metadata: text fields describing the file itself. Real cameras and phones commonly use a standard called EXIF, which can include the camera model, the software used, the date, and sometimes GPS coordinates. The two images in this room use a simpler, equivalent format (PNG text chunks) so the same idea can be read in plain JavaScript, with no external library.</p>
+  <h3>Why does it matter?</h3>
+  <p>People regularly share photos without realising what travels with them. A holiday photo posted the moment it’s taken can reveal exact GPS coordinates of someone’s home. A screenshot might carry the name of the software, account, or device that made it. None of this is visible by just looking at the picture.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Metadata has been used to locate people who believed they had hidden their location, to attribute anonymous leaks to a specific device or author, and in several well-documented cases, to undermine an attempt at anonymity entirely by accident.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Metadata is like the postmark and sender&rsquo;s return address on an envelope: the letter inside might say nothing identifying at all, but the envelope itself already told you who sent it, from where, and when.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">A note on these images</h3>
+    <p>Both images here are simple generated graphics, not real photos, with fictional metadata added for teaching purposes. The technique you practise &mdash; reading embedded text metadata &mdash; applies the same way to a real photo&rsquo;s real EXIF data.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain what image metadata is and how it differs from the visible picture.</li>
+    <li>Read a file&rsquo;s embedded text fields using a browser-based tool.</li>
+    <li>Recognise a field that risks revealing more than intended, such as a location.</li>
+    <li>Decode an encoded value found inside a metadata field.</li>
+    <li>Explain what "stripping metadata" does and why it is a recommended step before sharing.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: two layers in one file</h3>
+  <p>An image file typically has the actual picture data, and separately, a block of metadata: short text fields describing the file. You never see the metadata by just viewing the image; it only appears if something specifically reads it.</p>
+  <pre>Image file
+ ├─ Picture data        (what you see when you open it)
+ └─ Metadata fields     (invisible unless something reads them)
+      ├─ Software: "..."
+      ├─ Author: "..."
+      └─ sometimes: GPS location, device model, timestamp</pre>
+
+  <h3>Idea 2: what real cameras and phones add</h3>
+  <p>The EXIF standard, used by most cameras and phone cameras, can include the device make and model, the exact date and time, camera settings, and, if location services were enabled, precise GPS coordinates accurate to a few metres. None of it requires the photographer to type anything in: the device adds it automatically.</p>
+  <fieldset>
+    <legend>Mini quiz: what’s in the metadata?</legend>
+    <p>A photo taken on a phone with location services enabled is shared online exactly as captured, with no editing. What might its metadata reveal that isn’t visible in the picture itself?</p>
+    <label><input type="radio" name="q1" value="a"> The precise GPS coordinates of where it was taken</label>
+    <label><input type="radio" name="q1" value="b"> Nothing extra; only the pixels are ever stored</label>
+    <label><input type="radio" name="q1" value="c"> Only the file size, nothing else</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: reading it yourself</h3>
+  <p>You don&rsquo;t need special software to check: many operating systems show basic file properties on right-click, and dedicated tools (or, for this room, a small in-browser reader) can show every embedded field. It is worth checking before sharing anything you didn&rsquo;t create yourself, or anything you took somewhere you&rsquo;d rather not reveal.</p>
+
+  <h3>Idea 4: the fix is to strip it before sharing</h3>
+  <p>Most devices and many sharing platforms offer a "remove location data" or similar option before upload. Stripping metadata deletes these hidden fields entirely, leaving only the picture itself; it is a simple step that removes the whole category of risk.</p>
+  <fieldset>
+    <legend>Mini quiz: the fix</legend>
+    <p>What does "stripping metadata" from a photo do?</p>
+    <label><input type="radio" name="q2" value="a"> Removes the hidden text fields (like location or device info), leaving only the picture</label>
+    <label><input type="radio" name="q2" value="b"> Makes the picture lower resolution</label>
+    <label><input type="radio" name="q2" value="c"> Encrypts the photo so only the owner can open it</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example. A fictional company social media intern shares a product photo straight from their phone. Reading the file&rsquo;s metadata afterwards shows:</p>
+  <div class="card">
+    <pre>Software: ClydeCapture Mobile v3.2
+Author: marketing-temp
+Timestamp: 2026-04-02 16:47</pre>
+    <p>Nothing here looks dangerous at a glance. But it already reveals the exact app and account used, and the precise time the photo was taken, none of which was mentioned in the post itself. A photo taken with GPS enabled could just as easily have included exact coordinates. The fix each time is the same: check before posting, and strip location and unnecessary fields where the option exists.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Two real image files are provided below, each with genuine embedded metadata. Use the reader tool to view each file&rsquo;s raw text fields. Nothing here is uploaded anywhere: the file is read entirely in your browser.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Image A: staff-badge.png</h3>
+    <img src="../img/rooms/file-metadata/staff-badge.png" alt="A simple generated badge graphic used for this task" width="240" height="160" style="border:2px solid var(--char);border-radius:10px;display:block;margin-bottom:.6rem">
+    <button type="button" class="alt" id="meta-a-go">Read metadata</button>
+    <pre id="meta-a-out">Press the button to read this file’s embedded fields.</pre>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Image B: banner.png</h3>
+    <img src="../img/rooms/file-metadata/banner.png" alt="A simple generated striped banner graphic used for this task" width="240" height="110" style="border:2px solid var(--char);border-radius:10px;display:block;margin-bottom:.6rem">
+    <button type="button" class="alt" id="meta-b-go">Read metadata</button>
+    <pre id="meta-b-out">Press the button to read this file’s embedded fields.</pre>
+    <div class="row" style="margin-top:.6rem">
+      <button type="button" id="meta-b-strip">Strip metadata (simulate)</button>
+    </div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Decoder</h3>
+    <label for="dec-in">Paste a value from a metadata field to decode it</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out">Output appears here.</pre>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: read a field (easy)</h3>
+    <p>Read Image A&rsquo;s metadata. What software made this file, according to its own metadata?</p>
+    <div class="row"><label for="a1" style="margin:0">Software name</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: spot the risky field (easy&ndash;medium)</h3>
+    <p>Image A&rsquo;s metadata includes a Location field. What type of real-world risk does embedding a precise location in a shared photo create?</p>
+    <div class="row"><label for="a2" style="margin:0">One short reason</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: decode a hidden value (medium)</h3>
+    <p>Read Image B&rsquo;s metadata. One field contains a Base64-encoded value. Decode it with the Decoder tool above. What does it say?</p>
+    <div class="row"><label for="a3" style="margin:0">Decoded text</label><input type="text" id="a3" autocomplete="off"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: confirm the fix (harder)</h3>
+    <p>Press Strip metadata on Image B, then read its metadata again. How many text fields are found afterwards?</p>
+    <div class="row"><label for="a4" style="margin:0">Number</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Image A’s metadata included an Author, Software, Description, Location and Timestamp field, none of which were visible just by looking at the badge graphic. What surprised you most, and why?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>Open-ended: most learners note that the Location field is the most concerning, since it gives a precise, real-world detail with no visual indication it was ever recorded.</p></details></div>
+  <div class="card"><label for="r2">2. Why might a company not want precise GPS metadata attached to staff photos shared externally, even casual ones?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>It could reveal the exact location of an office, a loading bay, or other security-relevant site detail, or build up a pattern of staff movements over time, none of which the company intended to disclose.</p></details></div>
+  <div class="card"><label for="r3">3. In Task 3, the Base64-encoded value turned out to be readable once decoded. Why is that a useful reminder from this path’s earlier encoding room?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Encoding only disguises data; it provides no real protection, as you learned in Path 2. Hiding something inside a metadata field as Base64 does not make it secret, only slightly less obvious at a glance.</p></details></div>
+  <div class="card"><label for="r4">4. After stripping, Image B’s metadata showed zero fields. What does that confirm about what "stripping" actually does, compared with just not looking at the metadata?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>It confirms the fields are genuinely removed from the file, not merely hidden from view. Anyone who later reads the stripped file’s metadata, with any tool, would also find nothing.</p></details></div>
+  <div class="card"><label for="r5">5. Name one everyday situation where you, personally, might want to check or strip a photo’s metadata before sharing it, and why.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: posting a photo taken at home before selling something online, sharing a screenshot that might include device or account details, posting travel photos in real time rather than after leaving a location.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Image files can carry metadata, invisible fields describing the file, separate from the picture itself.</li>
+    <li>Real cameras and phones often embed GPS location automatically when enabled, with no extra action from the user.</li>
+    <li>A field can look like harmless text and still be encoded, which is not the same as being protected.</li>
+    <li>Stripping metadata removes these hidden fields entirely, which is why it is a recommended step before sharing.</li>
+    <li>Checking a file’s metadata takes seconds and reveals exactly what it reveals: nothing more, nothing less.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="lsb-steganography.html">LSB steganography: hiding data in plain sight</a>, where the hidden content sits inside the picture itself, not alongside it.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/png-metadata-engine.js"></script>
+<script src="../js/rooms/file-metadata.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSINT fundamentals: following the digital footprint | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/osint-fundamentals.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="osint-fundamentals">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>OSINT fundamentals: following the digital footprint</h1>
+    <p>Open-source intelligence, OSINT, means building a picture of someone or something using only information that is already public. No hacking, no passwords: just careful reading, cross-referencing, and knowing where people tend to overshare.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>OSINT (open-source intelligence) is the practice of gathering information from sources anyone can access: social profiles, forum posts, company websites, archived pages, public records. It needs no special access and breaks no law on its own, which is exactly why it is often the first step of both a legitimate security assessment and a real attack.</p>
+  <h3>Why does it matter?</h3>
+  <p>Attackers use OSINT to build a target profile before a phishing attempt or a social-engineering call: a pet&rsquo;s name for a security question, a job title for a convincing pretext, a manager&rsquo;s name to impersonate in an urgent email. Defenders use the same skills the other way round: to see what a determined attacker could already find out about their organisation, and to help staff understand what they are quietly giving away.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Authorised penetration tests and red team engagements usually start with an OSINT phase. Real incidents regularly trace back to information an attacker found simply by reading what was already public.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>A good OSINT investigator works like a librarian, not a burglar: every source they use was already open to the public. The skill is knowing which shelves to check, and noticing when the same name shows up in more than one place.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal and ethical</h3>
+    <p>Using these techniques against a real person without a legitimate, authorised reason (such as a permitted assessment) can still cause real harm and may break stalking, harassment or data protection law, even though every individual source is public. This room investigates an entirely fictional person, Jamie Ross, at a fictional company. No real people, accounts or websites are involved.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain what makes information "open source" and why that doesn’t make it safe to use however you like.</li>
+    <li>Correlate a username across more than one platform to build a fuller picture.</li>
+    <li>Use an archived or cached version of a page to find information since removed.</li>
+    <li>Combine several small, individually harmless facts into one finding.</li>
+    <li>Describe what someone could do to reduce their own public footprint.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: small facts add up</h3>
+  <p>No single public post usually gives away much on its own. A job title here, a gym’s name there, a pet’s name used as a throwaway joke. OSINT is rarely about finding one big leak: it is about collecting several small, harmless-looking facts and noticing what they add up to.</p>
+  <ol class="flow" aria-label="A typical OSINT trail">
+    <li><b>1. Find a handle</b>A username, email pattern, or display name to search on.</li>
+    <li><b>2. Cross-reference</b>Search that same handle across other platforms.</li>
+    <li><b>3. Check history</b>Archived or cached pages can hold what was since deleted.</li>
+    <li><b>4. Combine</b>Put the small facts together into one picture.</li>
+  </ol>
+
+  <h3>Idea 2: the same username is a thread to pull</h3>
+  <p>People often reuse a distinctive username across several unrelated sites, sometimes for convenience and sometimes without thinking about it. Finding that same handle on a second platform, especially one with a looser privacy setting, can reveal a real name, employer, or location that the first platform kept hidden.</p>
+  <fieldset>
+    <legend>Mini quiz: why reuse matters</legend>
+    <p>Someone uses the handle "harbour_jross82" on a professional forum (no name shown) and also on a public fitness app (full name shown). What does that let an investigator do?</p>
+    <label><input type="radio" name="q1" value="a"> Link the forum profile to a real name via the second platform</label>
+    <label><input type="radio" name="q1" value="b"> Nothing: the platforms are unrelated</label>
+    <label><input type="radio" name="q1" value="c"> Only something if the person follows themselves on both</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: the internet rarely forgets, even after deletion</h3>
+  <p>Archiving services periodically save snapshots of public web pages. A company page edited or taken down today may still exist in an earlier snapshot, complete with an old staff list, a phone number, or a line since quietly removed. Treat anything ever made public as potentially permanent.</p>
+  <fieldset>
+    <legend>Mini quiz: archived pages</legend>
+    <p>A company removes a staff directory page from its live website after a privacy review. Is that information necessarily gone?</p>
+    <label><input type="radio" name="q2" value="a"> No. An archived snapshot taken before the removal may still be accessible</label>
+    <label><input type="radio" name="q2" value="b"> Yes, removing a live page deletes it everywhere</label>
+    <label><input type="radio" name="q2" value="c"> Only if the company asks search engines to also delete their cache</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 4: reducing your own footprint</h3>
+  <ul class="tick">
+    <li>Use different, unrelated usernames across unrelated platforms where privacy matters.</li>
+    <li>Check what old, forgotten accounts and posts are still public, not just current ones.</li>
+    <li>Avoid combining a real name with identifying personal details (routine, location, family) in the same public post.</li>
+    <li>Remember that deleting a post does not guarantee it was never archived.</li>
+  </ul>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example. A tester, authorised to assess a fictional firm <code>glenmuir-partners.example</code>, starts with a job listing that names a contact: "Questions? Ask R. Thorn in IT."</p>
+  <div class="card">
+    <pre>Step 1: search "R. Thorn glenmuir-partners" &rarr; a forum post signed "rthorn_glenmuir", asking for help with a home network issue, including the make of router.
+Step 2: search "rthorn_glenmuir" on other platforms &rarr; the same handle on a public fitness app, full name "Robbie Thorn", home suburb visible from a running route.
+Step 3: check an archived snapshot of the company’s old "About us" page &rarr; Robbie Thorn listed as "IT Support, extension 214", since removed from the live site.</pre>
+    <p>None of these three facts alone is dangerous. Together, a tester now has a real name, a job role, a direct extension, a home area, and a plausible pretext ("hi, it&rsquo;s IT, following up about your home network") for a phishing or vishing attempt, built entirely from information Robbie never thought to connect.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>You are authorised to investigate a fictional person, Jamie Ross, ahead of a simulated phishing-awareness exercise for a fictional firm. Three simulated public sources are available below. Everything, including every "platform", is fictional and entirely contained on this page.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated public sources">
+    <div class="bar"><span aria-hidden="true">Simulated OSINT sources</span></div>
+    <div class="screen">
+      <p class="lab">Source 1: CraftForum &mdash; public woodworking forum profile</p>
+      <pre>Display name: WoodburnJR
+Bio: Been turning bowls since 2019. Day job keeps me at a desk at Clydebuild Logistics,
+so the lathe is my evening escape. Username here and on PixelTrail is the same if you
+want to see my hiking photos too.</pre>
+
+      <p class="lab" style="margin-top:1rem">Source 2: PixelTrail &mdash; public hiking-route sharing app</p>
+      <pre>Username: WoodburnJR
+Full name: Jamie Ross
+Recent route: "Thursday loop", starts and ends near Riverside Court, Glenburnie.
+Comment: "Same loop before work again, 3rd time this month!"</pre>
+
+      <p class="lab" style="margin-top:1rem">Source 3: Clydebuild Logistics &mdash; archived company page (captured 8 months ago, since edited)</p>
+      <pre>Staff directory (old version, no longer on the live site):
+J. Ross &mdash; Warehouse Systems Administrator &mdash; direct line 0141 555 0133
+"Jamie manages login access for the new warehouse stock system, live from next month."</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: find the handle (easy)</h3>
+    <p>Read Source 1. What username does WoodburnJR say is the same on another platform?</p>
+    <div class="row"><label for="a1" style="margin:0">Username</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: cross-reference it (easy&ndash;medium)</h3>
+    <p>Read Source 2. What real full name is now linked to that same handle?</p>
+    <div class="row"><label for="a2" style="margin:0">Full name</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: check the archive (medium)</h3>
+    <p>Read Source 3, information no longer on the live company site. What is Jamie&rsquo;s job title there?</p>
+    <div class="row"><label for="a3" style="margin:0">Job title</label><input type="text" id="a3" autocomplete="off"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: combine the clues (harder)</h3>
+    <p>Using all three sources together, what single detail would make a phishing pretext (an email pretending to be about the warehouse stock system) especially convincing, beyond just knowing Jamie’s name?</p>
+    <div class="row"><label for="a4" style="margin:0">One short reason</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Which single piece of information in Task 1 made Tasks 2 and 3 possible at all?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>The shared username. Without WoodburnJR appearing on more than one platform, the forum post and the hiking app would never have been connected to the same person.</p></details></div>
+  <div class="card"><label for="r2">2. Why is the archived company page in Source 3 arguably the most useful single source here, even though it is the oldest?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>It gives a specific, current job responsibility (administering the new stock system) that a phisher could build a highly relevant, believable pretext around, rather than just a name or a location.</p></details></div>
+  <div class="card"><label for="r3">3. None of the three sources alone looks like a security risk. Why does combining them change that?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Individually each fact is mundane: a hobby, a hiking route, an old staff listing. Combined, they give a name, a role, a direct line, a routine, and a live project to impersonate convincingly, which is a different level of risk entirely.</p></details></div>
+  <div class="card"><label for="r4">4. What would you recommend Jamie does differently, based on what you found?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: avoid using the same distinctive username across professional and personal platforms, especially where one shows a full name; be cautious about posting a recognisable daily routine (same route, same time) publicly; check what old company pages or directories might still be archived and ask for genuinely outdated listings to be requested for removal where possible.</p></details></div>
+  <div class="card"><label for="r5">5. OSINT techniques are legal to use on public information. What makes using them against a real, specific person potentially harmful or even unlawful, despite that?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Even lawfully public information, when deliberately gathered and combined about a specific person without a legitimate reason, can enable stalking, harassment, or targeted fraud, and may breach data protection law depending on how it is collected, stored or used. Legality of the source does not excuse a harmful purpose.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>OSINT uses only publicly available information, which is exactly why it is so effective.</li>
+    <li>A reused username is one of the easiest threads to pull between otherwise separate profiles.</li>
+    <li>Archived or cached pages can outlive what a live site currently shows.</li>
+    <li>Small, individually harmless facts can combine into a genuinely risky profile.</li>
+    <li>Using these same techniques against a real person without a legitimate reason can still cause real harm.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="file-metadata.html">File metadata: what a photo tells you besides the picture</a>, where the hidden information sits inside the files themselves.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/osint-fundamentals.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

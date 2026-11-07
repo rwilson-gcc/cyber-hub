@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command and path injection: talking to the server’s system | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/command-and-path-injection.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="command-and-path-injection">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Command and path injection: talking to the server’s system</h1>
+    <p>Some pages don’t just query a database, they run a system command or open a file on the server’s behalf. When your input reaches that command or path unchecked, you can redirect what the server does, or read files you were never meant to see. Everything here is simulated.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Some features need the server to do more than query a database: a network diagnostics page might run <code>ping</code>, or a document viewer might open a file by name. If the page builds that system command or file path by gluing in your text, the operating system can&rsquo;t tell your data from the developer&rsquo;s instruction, just like the database couldn&rsquo;t in SQL injection.</p>
+  <h3>Why does it matter?</h3>
+  <p>A command injection can let an attacker run arbitrary commands with the web server&rsquo;s own privileges: read files, install tools, or pivot further into the network. A path traversal can expose configuration files, credentials, or source code never meant to be public, using nothing more exotic than <code>../</code>.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Diagnostic tools (ping, traceroute, DNS lookups), image or document processing that shells out to another program, and file download or preview features that take a filename from the user are the classic places both flaws turn up.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Command injection is like asking a courier to &ldquo;deliver to 14 Mill Street, and also empty my bank account&rdquo; and the courier, unable to tell instruction from address, tries to do both. Path traversal is like a filing clerk who, told to fetch &ldquo;../../personnel/salaries&rdquo;, walks straight out of the folder they were handed and into one they shouldn&rsquo;t have access to.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test systems you own or have explicit permission to test. Running commands or reading files on a system without authorisation is a criminal offence under the Computer Misuse Act 1990. This room runs entirely inside a simulated command set and a fake file tree in your browser: nothing here executes on a real system.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain how user input can end up inside a system command or a file path.</li>
+    <li>Recognise shell metacharacters that chain or redirect a command.</li>
+    <li>Use path traversal to escape a folder the server meant to confine you to.</li>
+    <li>Tell a blacklist-based fix apart from an allow-list-based fix, and say which is safer.</li>
+    <li>Explain why avoiding the shell entirely beats trying to sanitise input for it.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: building a command from user input</h3>
+  <p>A vulnerable diagnostic page might build a command like this:</p>
+  <pre>cmd = "ping -c 1 " + user_input
+run_in_shell(cmd)</pre>
+  <p>Typed normally, <code>user_input</code> is just a hostname. But the shell treats certain characters specially, and those characters let one line of input become two commands.</p>
+  <ol class="flow" aria-label="Shell metacharacters">
+    <li><b>;</b>Ends one command, starts the next, regardless of whether the first succeeded.</li>
+    <li><b>&amp;&amp;</b>Runs the next command only if the first succeeded.</li>
+    <li><b>|</b>Pipes the output of one command into another.</li>
+    <li><b>$( )</b>or backticks run a command and substitute its output inline.</li>
+  </ol>
+  <fieldset>
+    <legend>Mini quiz: chaining commands</legend>
+    <p>A vulnerable page runs ping -c 1 USER_INPUT in a shell. Which input would most likely run a second, unrelated command afterwards?</p>
+    <label><input type="radio" name="q1" value="a"> 8.8.8.8; whoami</label>
+    <label><input type="radio" name="q1" value="b"> 8.8.8.8</label>
+    <label><input type="radio" name="q1" value="c"> localhost</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 2: walking out of a folder</h3>
+  <p>A file-serving feature often takes a filename and joins it onto a base folder:</p>
+  <pre>path = "/var/www/docs/" + filename
+open(path)</pre>
+  <p>If <code>filename</code> is allowed to contain <code>../</code>, each occurrence moves one folder up before the rest of the path is applied. Enough of them walk straight out of <code>docs/</code> and into any other folder the web server account can read.</p>
+  <pre>filename = "../../etc/passwd"
+path     = "/var/www/docs/../../etc/passwd"   &rarr;   "/etc/passwd"</pre>
+  <fieldset>
+    <legend>Mini quiz: path traversal</legend>
+    <p>What does ../ do in a file path?</p>
+    <label><input type="radio" name="q2" value="a"> Moves up one folder level</label>
+    <label><input type="radio" name="q2" value="b"> Deletes the current file</label>
+    <label><input type="radio" name="q2" value="c"> Has no special meaning outside Windows</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: why blacklists fail here too</h3>
+  <p>A common but weak fix is to strip out dangerous-looking characters like <code>;</code> or the string <code>../</code>. Both are easy to bypass: a semicolon can often be swapped for a newline or <code>&amp;&amp;</code>, and <code>....//</code> can collapse back into <code>../</code> once a naive filter removes the inner copy. Blacklisting specific bad patterns is always a step behind attackers who find a new one.</p>
+
+  <h3>Idea 4: the real fixes</h3>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>Flaw</th><th>Weak fix</th><th>Real fix</th></tr></thead>
+    <tbody>
+      <tr><td>Command injection</td><td>Strip semicolons and pipes</td><td>Never build a shell string; call the underlying function directly with arguments, or use a safe library API</td></tr>
+      <tr><td>Path traversal</td><td>Strip ../</td><td>Resolve the final path and check it is still inside the allowed folder; use an allow-list of known filenames</td></tr>
+    </tbody>
+  </table></div>
+  <p>Both real fixes share an idea from earlier rooms: keep user input as data, never let it become part of an instruction, whether that instruction is SQL, HTML or a shell command.</p>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>harbour-netops.example</code>, which has a "ping a host" diagnostic page. A normal request:</p>
+  <div class="card">
+    <pre>Input:    8.8.8.8
+Command run on the server:  ping -c 1 8.8.8.8
+Output:   PING 8.8.8.8: 1 packets transmitted, 1 received</pre>
+    <p>A tester tries chaining a second command:</p>
+    <pre>Input:    8.8.8.8; whoami
+Command run on the server:  ping -c 1 8.8.8.8; whoami
+Output:   PING 8.8.8.8: 1 packets transmitted, 1 received
+          www-data</pre>
+    <p>The semicolon ended the ping command and started a brand new one, which ran with the web server&rsquo;s own account. From here, an attacker could try to read files, look for credentials, or explore the network &mdash; all without ever touching a login page.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is the simulated <code>harbour-netops.example</code>: a "ping a host" diagnostic tool and a "view document" page. Both are interpreted by an in-browser engine over a small fake command set and a fake file tree. Nothing here reaches a real shell or a real filesystem.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated website">
+    <div class="bar"><span aria-hidden="true">harbour-netops.example</span></div>
+    <div class="screen">
+      <div class="site-grid">
+        <div class="site-panel">
+          <h3>Ping a host</h3>
+          <label for="pg-host">Hostname or IP</label>
+          <div class="row"><input type="text" id="pg-host" autocomplete="off" spellcheck="false" placeholder="8.8.8.8"><button type="button" class="alt" id="pg-go">Ping</button></div>
+          <pre id="pg-out">Output appears here.</pre>
+        </div>
+        <div class="site-panel">
+          <h3>View document</h3>
+          <label for="pg-file">Filename (inside docs/)</label>
+          <div class="row"><input type="text" id="pg-file" autocomplete="off" spellcheck="false" placeholder="welcome.txt"><button type="button" class="alt" id="pg-fgo">View</button></div>
+          <pre id="pg-fout">Output appears here.</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: spot the trigger (easy)</h3>
+    <p>Which character ends the intended ping command and lets a second one begin? Pick from: <code>.</code>, <code>;</code>, <code>-</code>.</p>
+    <div class="row"><label for="a1" style="margin:0">Character</label><input type="text" id="a1" autocomplete="off"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: run a second command (easy&ndash;medium)</h3>
+    <p>Enter <code>127.0.0.1; whoami</code> into the Ping a host field. Which user account does the simulated server say it is running as?</p>
+    <div class="row"><label for="a2" style="margin:0">Account name</label><input type="text" id="a2" autocomplete="off"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: walk out of the folder (medium)</h3>
+    <p>View <code>welcome.txt</code> first to see a normal result, then try walking up and out of <code>docs/</code> into <code>config/</code> using <code>../</code>. What is the name of the file you can now read in <code>config/</code>?</p>
+    <div class="row"><label for="a3" style="margin:0">Filename</label><input type="text" id="a3" autocomplete="off"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: find the flag and the right fix (harder)</h3>
+    <p>The file you found in Task 3 contains a Base64-encoded flag. Decode it below, then say which fix is strongest: stripping dangerous characters and strings, or avoiding the shell and checking the resolved path stays inside the allowed folder.</p>
+    <label for="dec-in">Paste text to decode</label>
+    <div class="row"><input type="text" id="dec-in" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="dec-btn">Decode Base64</button></div>
+    <pre id="dec-out">Output appears here.</pre>
+    <div class="row" style="margin-top:.6rem"><label for="a4" style="margin:0">stripping or avoiding</label><input type="text" id="a4" autocomplete="off"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. Why couldn’t the server tell the difference between the hostname and the extra command you added in Task 2?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>It built a single text string by gluing user input onto a fixed command and handed the whole thing to the shell. The shell interprets its own metacharacters wherever it finds them, with no way to know which part the developer wrote and which part came from a user.</p></details></div>
+  <div class="card"><label for="r2">2. How did ../ let you read a file outside the docs/ folder, and why didn’t the server stop it?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>Each ../ in the filename moved the resolved path up one folder before the final filename was applied, walking it out of docs/ entirely. The server simply joined the user’s text onto a base path without checking where the result actually ended up.</p></details></div>
+  <div class="card"><label for="r3">3. Why is stripping out ; or ../ a weaker fix than avoiding the shell, or checking the resolved path stays inside the allowed folder?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>A strip-based filter only blocks the specific patterns its author thought of. Attackers can often find alternative encodings, double the pattern so a single removal pass leaves one copy behind, or use a different separator the filter didn’t consider. Avoiding the shell, or checking the real resolved path, removes the whole class of bypass.</p></details></div>
+  <div class="card"><label for="r4">4. Command injection let the attacker run arbitrary commands as the web server’s own account. Why does that matter even if the account has limited permissions?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Even a low-privilege account can usually read some files, see environment variables, make outbound network connections, or act as a foothold for further attacks (privilege escalation, lateral movement). Least privilege limits the damage; it doesn’t eliminate it.</p></details></div>
+  <div class="card"><label for="r5">5. Name a real feature, other than ping or file viewing, where a developer might be tempted to build a command or path from user input, and how you would design it more safely instead.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: converting an uploaded file with an external tool (use a library with a proper API rather than shelling out), generating a PDF report by filename, running a backup script with a user-supplied name. Safer design: call the underlying library function directly with arguments, never a shell string, and validate any filename against an allow-list or a generated, non-guessable name.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Building a shell command or file path from user input lets that input become an instruction.</li>
+    <li>Shell metacharacters like ; && | chain or redirect commands.</li>
+    <li>../ walks a file path up and out of the folder it was meant to stay in.</li>
+    <li>Blacklisting specific dangerous characters or strings is fragile and usually bypassable.</li>
+    <li>The real fix is avoiding the shell entirely, or validating the resolved path and filename against what is actually allowed.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="secure-coding-fixes.html">Secure coding: fixing injection flaws</a>, a capstone room where you review short vulnerable snippets and apply the fixes yourself.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/command-and-path-injection.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

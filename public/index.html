@@ -33,6 +33,9 @@
     <li><a href="#how">How it works</a></li>
     <li><a href="#path1">Path 1: Web &amp; access fundamentals</a></li>
     <li><a href="#path2">Path 2: Encoding &amp; cryptography</a></li>
+    <li><a href="#path3">Path 3: Injection &amp; input validation</a></li>
+    <li><a href="#path4">Path 4: Client-side &amp; business logic</a></li>
+    <li><a href="#path5">Path 5: OSINT &amp; steganography</a></li>
     <li><a href="#future">Future paths</a></li>
   </ul>
 </nav>
@@ -63,8 +66,8 @@
 
   <div class="card" aria-label="Your progress in this browser">
     <div class="progress-wrap">
-      <strong id="hub-prog-text">Progress: 0 of 9 rooms marked complete</strong>
-      <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0" aria-labelledby="hub-prog-text"><div id="hub-bar"></div></div>
+      <strong id="hub-prog-text">Progress: 0 of 18 rooms marked complete</strong>
+      <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0" aria-labelledby="hub-prog-text"><div id="hub-bar"></div></div>
     </div>
     <p style="margin:.6rem 0 0;font-size:.85rem">Your progress is saved to your learner ID (top right), so it follows you between devices. A room ticks itself when you capture its flag, and you can tick or untick any box yourself. For a record of your actual answers, use each room's own "Download evidence file" button.</p>
   </div>
@@ -179,6 +182,129 @@
   </div>
 </div></section>
 
+<section id="path3" aria-labelledby="p3-h"><div class="wrap">
+  <div class="path-head">
+    <h2 id="p3-h" style="margin-bottom:0">Path 3: injection &amp; input validation</h2>
+    <p>Intermediate &middot; 3 live rooms</p>
+  </div>
+  <p class="lede">This path builds on Room 6 of Path 1 (SQL injection): the same idea, input treated as instruction, shows up in the browser, in system commands and in file paths. It finishes with a capstone room where you fix what you’ve been breaking. Start at Room 1 and work down.</p>
+
+  <div class="grid">
+    <article class="room" data-room="xss-script-injection">
+      <span class="num" aria-hidden="true">1</span>
+      <h3>Cross-site scripting: when the page runs your input</h3>
+      <p>Reflected, stored and DOM-based XSS, context-aware encoding, and defences that actually stop a payload running.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/xss-script-injection.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="xss-script-injection"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="command-and-path-injection">
+      <span class="num" aria-hidden="true">2</span>
+      <h3>Command and path injection: talking to the server’s system</h3>
+      <p>Shell metacharacters that chain commands, path traversal with ../, and why avoiding the shell beats filtering it.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~35 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/command-and-path-injection.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="command-and-path-injection"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="secure-coding-fixes">
+      <span class="num" aria-hidden="true">3</span>
+      <h3>Secure coding: fixing injection flaws</h3>
+      <p>A capstone room: review short vulnerable snippets and choose the fix that removes the cause, not just the symptom.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~35 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/secure-coding-fixes.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="secure-coding-fixes"> Done</label>
+      </div>
+    </article>
+  </div>
+</div></section>
+
+<section id="path4" aria-labelledby="p4-h"><div class="wrap">
+  <div class="path-head">
+    <h2 id="p4-h" style="margin-bottom:0">Path 4: client-side &amp; business logic</h2>
+    <p>Beginner → Intermediate &middot; 3 live rooms</p>
+  </div>
+  <p class="lede">Not every weakness needs a clever payload. This path covers what happens when a site trusts something it shouldn’t: the browser, a cookie’s automatic behaviour, a filename, or a rule that was never checked server-side. Start at Room 1 and work down.</p>
+
+  <div class="grid">
+    <article class="room" data-room="client-side-trust">
+      <span class="num" aria-hidden="true">1</span>
+      <h3>Client-side trust: storage and validation bypass</h3>
+      <p>Read and edit client-side storage and hidden fields with a simulated inspector, and see why none of it proves anything to the server.</p>
+      <div class="tags"><span class="tag">Beginner–Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/client-side-trust.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="client-side-trust"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="csrf-forged-requests">
+      <span class="num" aria-hidden="true">2</span>
+      <h3>CSRF: requests you never meant to send</h3>
+      <p>Forge a state-changing request using nothing but an existing session, then find the defence that actually proves intent.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/csrf-forged-requests.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="csrf-forged-requests"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="upload-and-logic-flaws">
+      <span class="num" aria-hidden="true">3</span>
+      <h3>Upload and logic flaws: when the rules have gaps</h3>
+      <p>A filename that lies about what it is, a basket that goes negative, and a workflow you can skip straight past.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~35 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/upload-and-logic-flaws.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="upload-and-logic-flaws"> Done</label>
+      </div>
+    </article>
+  </div>
+</div></section>
+
+<section id="path5" aria-labelledby="p5-h"><div class="wrap">
+  <div class="path-head">
+    <h2 id="p5-h" style="margin-bottom:0">Path 5: OSINT &amp; steganography</h2>
+    <p>Beginner → Intermediate &middot; 3 live rooms</p>
+  </div>
+  <p class="lede">Open-source investigation techniques and hidden-data challenges, CTF-style. The first room is pure technique; the other two use real files with real hidden data, read entirely in your browser. Start at Room 1 and work down.</p>
+
+  <div class="grid">
+    <article class="room" data-room="osint-fundamentals">
+      <span class="num" aria-hidden="true">1</span>
+      <h3>OSINT fundamentals: following the digital footprint</h3>
+      <p>Correlate a username across platforms, use an archived page, and see how small public facts combine into a real finding.</p>
+      <div class="tags"><span class="tag">Beginner</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/osint-fundamentals.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="osint-fundamentals"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="file-metadata">
+      <span class="num" aria-hidden="true">2</span>
+      <h3>File metadata: what a photo tells you besides the picture</h3>
+      <p>Read real embedded metadata from two image files with an in-browser tool, decode a hidden field, and confirm what stripping removes.</p>
+      <div class="tags"><span class="tag">Beginner–Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/file-metadata.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="file-metadata"> Done</label>
+      </div>
+    </article>
+    <article class="room" data-room="lsb-steganography">
+      <span class="num" aria-hidden="true">3</span>
+      <h3>LSB steganography: hiding data in plain sight</h3>
+      <p>Extract a real hidden message from real pixel data using least-significant-bit steganography and a canvas-based tool you can inspect.</p>
+      <div class="tags"><span class="tag">Intermediate</span><span class="tag">~30 min</span></div>
+      <div class="actions">
+        <a class="btn" href="rooms/lsb-steganography.html">Start room</a>
+        <label class="check"><input type="checkbox" class="done-check" data-room="lsb-steganography"> Done</label>
+      </div>
+    </article>
+  </div>
+</div></section>
+
 <section id="future" aria-labelledby="fut-h" style="border-bottom:0"><div class="wrap future">
   <div class="path-head">
     <h2 id="fut-h" style="margin-bottom:0">Future paths</h2>
@@ -191,27 +317,9 @@
     <span class="cone" aria-hidden="true">&#9888;</span>
   </div>
 
-  <p class="lede">Nothing below is live yet. It&rsquo;s here so the hub has a home for each path as it&rsquo;s published.</p>
+  <p class="lede">Nothing below is live yet. It&rsquo;s here so the hub has a home for each remaining path as it&rsquo;s published.</p>
 
   <div class="grid">
-    <article class="room soon">
-      <span class="num" aria-hidden="true">3</span>
-      <h3>Path 3: injection &amp; input validation</h3>
-      <p>Cross-site scripting, deeper injection techniques, and secure coding fixes (building on Room 6 above).</p>
-      <div class="tags"><span class="tag">Coming soon</span></div>
-    </article>
-    <article class="room soon">
-      <span class="num" aria-hidden="true">4</span>
-      <h3>Path 4: client-side &amp; business logic</h3>
-      <p>Client-side storage and validation bypass, CSRF, file upload weaknesses and business logic flaws.</p>
-      <div class="tags"><span class="tag">Coming soon</span></div>
-    </article>
-    <article class="room soon">
-      <span class="num" aria-hidden="true">5</span>
-      <h3>Path 5: OSINT &amp; steganography</h3>
-      <p>Open-source investigation techniques and hidden-data challenges, CTF-style.</p>
-      <div class="tags"><span class="tag">Coming soon</span></div>
-    </article>
     <article class="room soon">
       <span class="num" aria-hidden="true">6</span>
       <h3>Path 6: APIs &amp; server misconfiguration</h3>

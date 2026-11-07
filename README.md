@@ -1,6 +1,6 @@
 # Cyber Security Learning Hub (Glasgow Clyde College)
 
-Static hub + nine challenge rooms, with a small API that gives every learner a unique ID and saves their progress in the background.
+Static hub + eighteen challenge rooms across five paths, with a small API that gives every learner a unique ID and saves their progress in the background.
 
 ## Run it
 
@@ -25,7 +25,7 @@ Local development without Docker: `pip install -r server/requirements.txt && DAT
 ```
 public/
   index.html                  hub
-  rooms/*.html                one page per room (rooms 1-6 = Path 1, 7-9 = Path 2)
+  rooms/*.html                one page per room (1-6 Path 1, 7-9 Path 2, 10-12 Path 3, 13-15 Path 4, 16-18 Path 5)
   css/base.css                tokens + rules shared by hub and rooms
   css/room.css                rules shared by every room
   css/rooms/<room>.css        hero colours and room-specific parts

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upload and logic flaws: when the rules have gaps | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/upload-and-logic-flaws.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="upload-and-logic-flaws">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Upload and logic flaws: when the rules have gaps</h1>
+    <p>Some weaknesses aren’t about breaking an input filter, they are about a feature that trusted the wrong thing, or a workflow that assumed everyone follows the steps in order. This room covers two of the most common: unsafe uploads, and business logic that bends further than it should.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Not every flaw involves injecting code. A file upload feature can be unsafe simply by trusting the wrong signal about what a file is. A shop&rsquo;s basket can be broken by a number that was never range-checked. A multi-step process can be skipped if only the page, not the server, enforces the order. These are called logic flaws: the code runs exactly as written, but the rules it enforces have a gap.</p>
+  <h3>Why does it matter?</h3>
+  <p>Automated scanners are good at finding injection but often miss logic flaws entirely, because nothing about them looks malformed: every request is syntactically valid. Finding these needs you to understand what the feature was supposed to guarantee, and check whether it actually does.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Profile picture and document upload features, shopping basket and coupon systems, and multi-step checkouts or sign-up flows are classic places both kinds of flaw turn up, often in otherwise well-built sites.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>A bouncer who only checks the label sewn into a jacket, not what&rsquo;s actually inside the venue bag, can be fooled by anyone who simply changes the label. A till that lets you "return" more items than you bought, crediting money back, isn&rsquo;t broken code: it&rsquo;s a rule nobody thought to write.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test systems you own or have explicit permission to test. Exploiting upload or logic flaws on a real site without authorisation is a criminal offence under the Computer Misuse Act 1990. The simulated upload checker in this room only evaluates filename and declared type strings: no file is ever actually uploaded, stored or run.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain why a file extension or declared content type cannot be trusted on its own.</li>
+    <li>Identify filenames that would slip past a naive, extension-only check.</li>
+    <li>Find and exploit a logic flaw in a basket (negative quantity, stacked coupons).</li>
+    <li>Bypass a workflow by skipping a step a page assumed would always happen first.</li>
+    <li>Describe the server-side fix for each kind of flaw.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: a file is not what its name or label claims</h3>
+  <p>A file&rsquo;s extension (<code>.jpg</code>) and its declared content type (the <code>Content-Type</code> header the browser sends) are both just labels the uploader chose. Neither is checked against the file&rsquo;s actual content by a naive upload handler, so both can be set to anything.</p>
+  <pre>photo.jpg.php     &larr; some servers run the file based on the LAST part, ignoring the rest
+shell.php%00.jpg  &larr; older systems could be tricked by a null byte before the real extension
+Content-Type: image/jpeg   &larr; sent by the browser, not verified against the file itself</pre>
+  <fieldset>
+    <legend>Mini quiz: which filename is risky?</legend>
+    <p>An upload form only checks that a filename contains ".jpg" somewhere. Which of these filenames would wrongly pass that check?</p>
+    <label><input type="radio" name="q1" value="a"> exploit.php.jpg</label>
+    <label><input type="radio" name="q1" value="b"> holiday-photo.jpg</label>
+    <label><input type="radio" name="q1" value="c"> notes.txt</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 2: business logic flaws</h3>
+  <p>A logic flaw is a gap in the <i>rules</i>, not the syntax. Every request involved is well-formed, so there is nothing for an injection filter to catch. Common examples: a quantity field that accepts negative numbers, discount codes that can be applied more than once, or a price recalculated client-side instead of looked up server-side.</p>
+  <pre>quantity = -3
+total = quantity * unit_price     <span class="bad">&larr; produces a negative total: a "refund" for buying nothing</span></pre>
+  <fieldset>
+    <legend>Mini quiz: spotting a logic flaw</legend>
+    <p>A basket lets you apply the same single-use coupon code three times by resubmitting the form. What kind of flaw is this?</p>
+    <label><input type="radio" name="q2" value="a"> A business logic flaw: nothing stops the same code being reused</label>
+    <label><input type="radio" name="q2" value="b"> SQL injection</label>
+    <label><input type="radio" name="q2" value="c"> Cross-site scripting</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: workflows are only as strict as the server makes them</h3>
+  <p>A multi-step process (verify email, then set a password, then finish sign-up) is often enforced only by which page the user is shown next. If the server doesn&rsquo;t independently track which steps have genuinely been completed, a user can jump straight to the final step&rsquo;s request and skip everything in between.</p>
+
+  <h3>Idea 4: the fixes</h3>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>Flaw</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>Unsafe upload</td><td>Check the file&rsquo;s actual content (not just its name), use an allow-list of real types, store uploads outside the web root with generated names</td></tr>
+      <tr><td>Negative or illogical values</td><td>Range-check every value server-side; recalculate totals server-side rather than trusting a client-sent total</td></tr>
+      <tr><td>Reused codes / stacked discounts</td><td>Track usage server-side and enforce limits there, not just in the page</td></tr>
+      <tr><td>Skipped workflow steps</td><td>Track real progress server-side (a status flag per user) and check it before allowing the next step, not just which page was shown</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>harbour-print-shop.example</code>. Its upload form only checks the filename ends in an allowed-looking string:</p>
+  <div class="card">
+    <pre>if filename.endswith((".jpg", ".png", ".pdf")): accept()</pre>
+    <p>A tester uploads a file named <code>design.php.jpg</code>. The check passes because the filename does end in <code>.jpg</code>. But depending on how the server is configured, it might store and later execute the file based on an earlier part of the name, or a misconfigured server might run any file with <code>.php</code> anywhere in the name. Separately, the same site&rsquo;s basket accepts a quantity of <code>-2</code> for an item, and the total goes negative, which the checkout happily treats as a discount on the rest of the order. Neither bug needed a single special character: both needed only a value the developer never imagined.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is the simulated <code>harbour-print-shop.example</code>: an upload checker, a basket with a coupon box, and a three-step order workflow. The upload checker only evaluates filename and declared type strings: no file is ever actually uploaded, stored or executed. Nothing else here reaches a real server either.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated website">
+    <div class="bar"><span aria-hidden="true">harbour-print-shop.example</span></div>
+    <div class="screen">
+      <p class="lab">Upload a design (simulated check: extension and declared type only; no real file handling)</p>
+      <div class="row"><input type="text" id="up-name" autocomplete="off" spellcheck="false" placeholder="e.g. design.jpg"><button type="button" class="alt" id="up-go">Upload</button></div>
+      <div id="up-out" aria-live="polite"></div>
+
+      <p class="lab" style="margin-top:1.2rem">Basket</p>
+      <div class="row"><label for="bk-qty" style="margin:0">Poster quantity (£8.00 each)</label><input type="text" id="bk-qty" value="1" style="max-width:5rem" inputmode="numeric" autocomplete="off"></div>
+      <div class="row"><label for="bk-coupon" style="margin:0">Coupon code</label><input type="text" id="bk-coupon" autocomplete="off" placeholder="e.g. WELCOME10"><button type="button" class="alt" id="bk-apply">Apply</button></div>
+      <pre id="bk-out">Basket total: £8.00</pre>
+
+      <p class="lab" style="margin-top:1.2rem">Order workflow</p>
+      <p style="margin:.2rem 0">Steps: 1 confirm basket &rarr; 2 enter address &rarr; 3 pay and confirm</p>
+      <div class="row"><label for="wf-step" style="margin:0">Jump directly to step</label><input type="text" id="wf-step" style="max-width:4rem" inputmode="numeric" autocomplete="off"><button type="button" class="alt" id="wf-go">Go</button></div>
+      <pre id="wf-out">Currently on step 1 of 3.</pre>
+    </div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: spot the risky filename (easy)</h3>
+    <p>Try uploading <code>design.php.jpg</code> and read the verdict. Why does a naive, extension-only check wrongly accept it?</p>
+    <div class="row"><label for="a1" style="margin:0">One-word reason</label><input type="text" id="a1" autocomplete="off" spellcheck="false"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 2: break the basket with quantity (easy&ndash;medium)</h3>
+    <p>Set the poster quantity to <code>-4</code> and look at the basket total. What happens to the total?</p>
+    <div class="row"><label for="a2" style="margin:0">What happens</label><input type="text" id="a2" autocomplete="off" spellcheck="false"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 3: stack a coupon (medium)</h3>
+    <p>Set quantity back to a sensible number, then apply the coupon code <code>WELCOME10</code> three times in a row by pressing Apply repeatedly. What happens to the total after the first application compared with later ones?</p>
+    <div class="row"><label for="a3" style="margin:0">Compare first vs later</label><input type="text" id="a3" autocomplete="off" spellcheck="false"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 4: skip a workflow step (harder)</h3>
+    <p>Try jumping straight to step 3 of the order workflow without completing steps 1 and 2. What does the simulated server do, and what single change would fix it?</p>
+    <div class="row"><label for="a4" style="margin:0">What the server does, and the fix</label><input type="text" id="a4" autocomplete="off" spellcheck="false"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. In Task 1, why is checking only the end of a filename not the same as verifying what the file actually is?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>The filename is just a label the uploader chose; it says nothing provable about the file’s real content. A naive check can be satisfied by a name engineered to end the right way while being something else entirely.</p></details></div>
+  <div class="card"><label for="r2">2. In Task 2, what should the server have done differently with the quantity value before using it in a calculation?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>Range-checked it: rejected anything below a sensible minimum (such as 1) before it was ever used in the total calculation, rather than multiplying whatever value arrived.</p></details></div>
+  <div class="card"><label for="r3">3. In Task 3, why did reapplying the same coupon work? What would a server need to track to stop it?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>The server checked that the code was valid but never recorded that this basket, or this account, had already used it. It would need to track coupon usage server-side and reject a second application of the same single-use code.</p></details></div>
+  <div class="card"><label for="r4">4. In Task 4, why could the workflow be skipped just by changing which step was requested?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>The order of steps was only enforced by which page the user happened to be shown, not by anything the server independently verified. The server needed its own record of which steps had genuinely been completed before allowing the next one.</p></details></div>
+  <div class="card"><label for="r5">5. Across all three challenges in this room, what single question would have caught each flaw during design or review?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>"What is actually enforcing this rule, and is it enforced on the server, independent of what the client sends or which page it requests?" All three flaws trusted something client-controlled, whether that was a filename, a quantity, or simply which page was requested next.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>A file’s extension or declared type is a label the uploader controls, not proof of its content.</li>
+    <li>Logic flaws exploit missing rules, not malformed input, which is why scanners often miss them.</li>
+    <li>Every numeric value from the client needs a sensible range check on the server.</li>
+    <li>Single-use codes and limits must be tracked and enforced server-side.</li>
+    <li>A multi-step workflow needs the server, not just the page shown, to track genuine progress.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> That completes Path 4: client-side and business logic. Path 5 starts with <a href="osint-fundamentals.html">OSINT fundamentals: following the digital footprint</a>. Head back to the <a href="../index.html">hub</a> to tick this room off.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/upload-and-logic-flaws.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

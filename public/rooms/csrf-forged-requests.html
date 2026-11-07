@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSRF: requests you never meant to send | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/csrf-forged-requests.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="csrf-forged-requests">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>CSRF: requests you never meant to send</h1>
+    <p>Browsers attach your cookies to every request automatically, even ones a completely different website triggered without your knowledge. This room shows how that habit can be turned against you, and the defences that stop it. Everything is simulated.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>When you log into a site, your browser usually keeps a cookie that proves who you are on every later request. That is convenient, but it has a side effect: the browser sends that cookie automatically with <i>any</i> request to that site, including one triggered by a page you never meant to interact with. Cross-Site Request Forgery, or CSRF, is an attack built entirely on that automatic behaviour.</p>
+  <h3>Why does it matter?</h3>
+  <p>If a site only checks "does this request have a valid session cookie?", it can&rsquo;t tell a request the user actually meant to make from one a hostile page quietly triggered on their behalf. Being logged in proves who you are; it says nothing about whether you meant to send this particular request.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Any action that changes something while relying only on a cookie for authentication is a potential target: changing an email address, transferring funds, deleting an account, changing a password. A single crafted link or an auto-submitting form on an unrelated site is often all it takes.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine your front door has a lock that opens automatically whenever it recognises your coat, even if someone else is wearing it and simply knocked on your behalf. The lock proves the coat is yours; it proves nothing about who is currently wearing it or whether you asked for the door to be opened.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test systems you own or have explicit permission to test. Forging requests against real accounts without authorisation is a criminal offence under the Computer Misuse Act 1990. This room is a full simulation: no real cookies, cross-site requests or accounts are involved.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain why a cookie alone proves identity but not intent.</li>
+    <li>Tell a state-changing request apart from a harmless one.</li>
+    <li>Read a simple request and spot that nothing in it proves the user meant to send it.</li>
+    <li>Build or edit a forged request so a vulnerable server accepts it.</li>
+    <li>Explain what an anti-CSRF token, SameSite cookies, and an Origin check each add.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: cookies travel automatically</h3>
+  <p>Once logged in, your browser stores a session cookie and attaches it to every request sent to that site, from any page, any tab, any source, without asking you each time. A hostile page doesn&rsquo;t need to steal your cookie: it just needs to get your browser to make a request, and the cookie comes along for free.</p>
+  <pre>&lt;img src="https://bank.example/transfer?to=attacker&amp;amount=500"&gt;</pre>
+  <p>If that one line sits on any page you happen to visit while logged into <code>bank.example</code>, your browser requests it, cookie included, with no click required.</p>
+
+  <h3>Idea 2: which requests are worth forging?</h3>
+  <p>A request that only reads data (viewing a page) is a low-value target: forging it just shows the attacker a page, not the victim. A request that <b>changes</b> something &mdash; a transfer, a password change, a deletion &mdash; is the real target, because it performs an action as the victim.</p>
+  <fieldset>
+    <legend>Mini quiz: which action is a CSRF target?</legend>
+    <p>Which of these is the better target for a CSRF attack?</p>
+    <label><input type="radio" name="q1" value="a"> A request that changes the logged-in user’s email address</label>
+    <label><input type="radio" name="q1" value="b"> A request that loads the site’s public homepage</label>
+    <label><input type="radio" name="q1" value="c"> A request that searches the site’s public product catalogue</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: why a cookie alone isn&rsquo;t proof of intent</h3>
+  <p>A server checking only "is there a valid session cookie?" is really only checking "is someone logged in?" It has no way to know whether the logged-in user actually clicked a button on the real site, or whether their browser was quietly directed to make the request by a page on a different site entirely. Something extra is needed to prove the request was genuinely intended.</p>
+  <fieldset>
+    <legend>Mini quiz: what does a cookie prove?</legend>
+    <p>A server receives a request with a valid session cookie attached. What does that prove on its own?</p>
+    <label><input type="radio" name="q2" value="a"> That the browser making the request is logged in. Nothing about whether the user meant to send it</label>
+    <label><input type="radio" name="q2" value="b"> That the user clicked a button on the real site</label>
+    <label><input type="radio" name="q2" value="c"> That the request did not come from another website</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 4: the real defences</h3>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>Defence</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td>Anti-CSRF token</td><td>A random, unguessable value the real page includes in the request. A forging page on another site has no way to read or guess it, so the server rejects requests without a matching token.</td></tr>
+      <tr><td>SameSite cookies</td><td>Tells the browser not to send the cookie at all on requests triggered from another site, which stops most forgery attempts before they even reach the server.</td></tr>
+      <tr><td>Origin / Referer check</td><td>The server checks where the request claims to have come from and rejects anything not from its own site.</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example. A fictional forum, <code>glenfield-forum.example</code>, lets a logged-in member delete their account with this request, authenticated only by a cookie:</p>
+  <div class="card">
+    <pre>POST /account/delete HTTP/1.1
+Host: glenfield-forum.example
+Cookie: session=abc123...</pre>
+    <p>An attacker hosts this on a completely unrelated page:</p>
+    <pre>&lt;form id="f" action="https://glenfield-forum.example/account/delete" method="POST"&gt;&lt;/form&gt;
+&lt;script&gt;document.getElementById('f').submit()&lt;/script&gt;</pre>
+    <p>Anyone logged into the forum who merely visits the attacker&rsquo;s page has their account deleted, with no click, no warning, and nothing on the attacker&rsquo;s page even mentioning the forum. The request looked completely legitimate to the server: it had a valid cookie. It just wasn&rsquo;t something the user asked for.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is the simulated <code>glenfield-forum.example</code>, where you are already logged in with a session cookie. A simulated attacker page lets you build the kind of forged request a hostile site would send. Defences can be switched on one at a time to see what each one actually stops. Nothing here makes a real cross-site request.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated site and attacker page">
+    <div class="bar"><span aria-hidden="true">glenfield-forum.example</span><span id="sess-state">Logged in as: amy (session cookie set)</span></div>
+    <div class="screen">
+      <p class="lab">Available actions on the real site</p>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Action</th><th>Request</th><th>Changes something?</th></tr></thead>
+        <tbody>
+          <tr><td>View profile</td><td>GET /profile</td><td>No</td></tr>
+          <tr><td>Search posts</td><td>GET /search?q=...</td><td>No</td></tr>
+          <tr><td>Change email</td><td>POST /account/email</td><td>Yes</td></tr>
+          <tr><td>Delete account</td><td>POST /account/delete</td><td>Yes</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Simulated attacker page</h3>
+    <label for="csrf-action">Action to forge</label>
+    <select id="csrf-action" style="font:inherit;padding:.5rem;border:2px solid var(--char);border-radius:10px">
+      <option value="email">POST /account/email (change email to attacker@evil.example)</option>
+      <option value="delete">POST /account/delete</option>
+    </select>
+    <div class="row">
+      <button type="button" class="alt" id="csrf-view">View forged request</button>
+      <button type="button" id="csrf-send">Send it (simulate victim visiting attacker page)</button>
+    </div>
+    <pre id="csrf-out">Choose an action and press View forged request.</pre>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Defences</h3>
+    <label><input type="checkbox" id="def-token"> Require anti-CSRF token</label>
+    <label><input type="checkbox" id="def-samesite"> SameSite cookies</label>
+    <label><input type="checkbox" id="def-origin"> Check Origin header</label>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: find the target (easy)</h3>
+    <p>Look at the table of actions on the real site. Which single action would do the most damage if successfully forged: View profile, Search posts, or Delete account?</p>
+    <div class="row"><label for="a1" style="margin:0">Action name</label><input type="text" id="a1" autocomplete="off" spellcheck="false"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 2: read the request (easy&ndash;medium)</h3>
+    <p>Press View forged request for the email-change action, with all defences off. The server has a valid session cookie to check. What is missing from the request that would prove the real user meant to send it?</p>
+    <div class="row"><label for="a2" style="margin:0">What is missing</label><input type="text" id="a2" autocomplete="off" spellcheck="false"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 3: send the forged request (medium)</h3>
+    <p>With all defences still off, select Delete account and press Send it. What does the simulated server do?</p>
+    <div class="row"><label for="a3" style="margin:0">What the server does</label><input type="text" id="a3" autocomplete="off" spellcheck="false"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 4: find the defence that stops it (harder)</h3>
+    <p>Turn the defences on one at a time and try sending the Delete account forgery again after each change. Which single defence, on its own, stops the forged request from succeeding?</p>
+    <div class="row"><label for="a4" style="margin:0">Defence name</label><input type="text" id="a4" autocomplete="off" spellcheck="false"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. In Task 2, what exactly was missing from the request that a legitimate email-change request should have included?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>An unpredictable, server-issued value (an anti-CSRF token) proving the request came from a page the real site actually served, not merely that the browser making it happens to be logged in.</p></details></div>
+  <div class="card"><label for="r2">2. In Task 3, why did the server accept a request it had never shown the user a form for?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>The server’s only check was for a valid session cookie, and the browser attached that cookie automatically regardless of where the request originated. The server had no way to tell the request apart from one made on its own site.</p></details></div>
+  <div class="card"><label for="r3">3. In Task 4, which defence worked, and why doesn’t a cookie alone provide the same protection?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>Likely answer: the anti-CSRF token (or SameSite cookies, or an Origin check, depending on what was tried). A session cookie proves identity; the working defence additionally proves the request itself was intended, which a cookie alone cannot do.</p></details></div>
+  <div class="card"><label for="r4">4. Why might a site want more than one of these defences at once, rather than relying on just one?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>Each defence covers slightly different cases and can have edge cases or compatibility gaps (for example, SameSite behaviour varies with older browsers or certain link types). Layering them means a gap in one is still likely caught by another.</p></details></div>
+  <div class="card"><label for="r5">5. GET requests are sometimes used for actions that change something, such as GET /unsubscribe?id=123. Why is that a particularly easy CSRF target?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>A GET request can be triggered just by loading a URL, such as in an image tag or a link, with no form or JavaScript needed at all. Using GET for anything that changes data makes forging it as simple as getting the victim’s browser to load one URL.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Browsers attach cookies automatically to every request, regardless of which page triggered it.</li>
+    <li>A valid session cookie proves identity, not intent.</li>
+    <li>State-changing actions are the real CSRF targets; read-only requests are low value to forge.</li>
+    <li>Anti-CSRF tokens, SameSite cookies, and Origin checks each independently stop forged requests.</li>
+    <li>State-changing actions should never be implemented using GET.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="upload-and-logic-flaws.html">Upload and logic flaws: when the rules have gaps</a>, where trusting a filename or a basket total causes its own kind of trouble.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/csrf-forged-requests.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client-side trust: storage and validation bypass | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/client-side-trust.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="client-side-trust">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Client-side trust: storage and validation bypass</h1>
+    <p>Anything that runs in the browser can be read and changed by the person using it. This room shows you how to inspect and edit what a page trusts on the client side, and why the server must never take its word for it.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>A web page runs code in the visitor&rsquo;s own browser: JavaScript, form fields, local storage, cookies. All of it is fully visible and fully editable by whoever is using that browser, using nothing more than tools already built into every browser. If a site relies on something in that environment staying as the developer left it, it is trusting data it does not control.</p>
+  <h3>Why does it matter?</h3>
+  <p>Prices, discount codes, user roles, quantity limits and validation rules are sometimes implemented only on the client, because it is quick and makes the page feel responsive. None of that is enforcement. Anyone can open the browser&rsquo;s developer tools, or simply edit the request being sent, and the server sees whatever they choose to send it.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>E-commerce checkouts that trust a client-supplied price, admin panels that only hide a button rather than checking permission server-side, and forms that enforce limits purely with JavaScript are all common, real examples of this mistake.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Imagine a shop where the price tag is handwritten by the customer and the till just reads whatever is written on it. The till isn&rsquo;t checking a price list; it&rsquo;s trusting a label anyone could have changed. The fix isn&rsquo;t a harder-to-edit label, it&rsquo;s a till that looks the price up itself.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">Stay legal</h3>
+    <p>Only test systems you own or have explicit permission to test. Manipulating a real site&rsquo;s checkout or storage without authorisation is a criminal offence under the Computer Misuse Act 1990, even if no payment is ever completed. The simulated inspector in this room never touches your browser&rsquo;s real storage, cookies, or any real site.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Explain why anything in the browser is visible and editable by the user.</li>
+    <li>Use a simulated inspector to read values from client-side storage.</li>
+    <li>Edit a hidden form field and a client-side-only limit, and see how a vulnerable server responds.</li>
+    <li>Identify which value a page should never have trusted the client with.</li>
+    <li>Explain what server-side validation needs to check instead.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: the browser is the user&rsquo;s machine, not the developer&rsquo;s</h3>
+  <p>Once a page is loaded, its HTML, CSS and JavaScript are sitting on the visitor&rsquo;s computer. Built-in developer tools let anyone view and edit the page, inspect storage, and see and change the exact request about to be sent. None of this requires special skill or special software: it ships with every modern browser.</p>
+  <ol class="flow" aria-label="What is visible client-side">
+    <li><b>HTML &amp; JS</b>Fully readable. Any logic inside it can be read and reasoned about.</li>
+    <li><b>Hidden fields</b>Invisible on the page, but present and editable in the HTML.</li>
+    <li><b>Storage &amp; cookies</b>Readable and writable through developer tools.</li>
+    <li><b>The request</b>Whatever is actually sent to the server can be rewritten before it goes.</li>
+  </ol>
+
+  <h3>Idea 2: storing authority on the client</h3>
+  <p>Some values represent authority: what a user is allowed to do, or how much something costs. If one of those lives only in the browser &mdash; a hidden field, a storage value, a cookie &mdash; the user effectively holds the final say over it, because they can change it before the server ever sees it.</p>
+  <fieldset>
+    <legend>Mini quiz: where does authority belong?</legend>
+    <p>A checkout page stores the current user’s discount percentage in a cookie the browser sends with every request. What’s the problem?</p>
+    <label><input type="radio" name="q1" value="a"> The user can edit the cookie to claim any discount they like</label>
+    <label><input type="radio" name="q1" value="b"> Cookies cannot store numbers</label>
+    <label><input type="radio" name="q1" value="c"> Nothing: cookies are encrypted by default</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: client-side validation is a convenience, not a control</h3>
+  <p>JavaScript that stops a form submitting with an empty field, or a <code>maxlength</code> attribute, makes the page pleasant to use. It runs entirely in the browser, so it can always be skipped: by disabling JavaScript, by editing the page, or simply by sending the underlying request directly, which is exactly what a tool like the inspector in this room lets you do.</p>
+  <fieldset>
+    <legend>Mini quiz: what proves a value is safe?</legend>
+    <p>A page disables the "Buy" button until quantity is at least 1. Does the disabled button prove the server will only ever receive a valid quantity?</p>
+    <label><input type="radio" name="q2" value="a"> No. Disabling a button is a client-side convenience, not a server-side check</label>
+    <label><input type="radio" name="q2" value="b"> Yes, disabled buttons cannot be re-enabled</label>
+    <label><input type="radio" name="q2" value="c"> Yes, because the button has no name attribute</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 4: what the server must do instead</h3>
+  <p>The server should treat every incoming value as untrusted, however it arrived, and look up or recompute anything that represents authority: re-fetch the real price from the database, re-check the user&rsquo;s real role from their session, and re-apply every limit server-side, regardless of what the client claimed.</p>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example on a fictional site, <code>riverbank-merch.example</code>. A tester opens the checkout page&rsquo;s developer tools and finds this hidden field:</p>
+  <div class="card">
+    <pre>&lt;input type="hidden" name="unit_price" value="24.99"&gt;</pre>
+    <p>They edit the value in the inspector before submitting:</p>
+    <pre>&lt;input type="hidden" name="unit_price" value="0.01"&gt;</pre>
+    <p>If the server simply trusts whatever <code>unit_price</code> arrives with the order instead of looking the real price up itself, the order goes through at the edited amount. The fix is not to hide the field better or encrypt it: it is to never send the price to the client as something to be trusted back. The server should look the price up from the product ID alone.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Your target is the simulated <code>riverbank-merch.example</code> checkout. A simulated inspector panel lets you view three things a real browser&rsquo;s developer tools would show: client-side Storage, the page&rsquo;s Form fields (including hidden ones), and the exact Request that submitting the form would send. Nothing here touches your real browser&rsquo;s storage, cookies, or any real network.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="browser" role="region" aria-label="Simulated website">
+    <div class="bar"><span aria-hidden="true">riverbank-merch.example &mdash; checkout</span></div>
+    <div class="screen">
+      <p class="lab">Tartan scarf &mdash; quantity:</p>
+      <div class="row"><input type="text" id="qty" value="1" style="max-width:5rem" inputmode="numeric" autocomplete="off"><button type="button" class="alt" id="buy-btn">Buy now</button></div>
+      <div id="buy-out" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="card tool">
+    <h3 style="margin-top:0">Inspector</h3>
+    <div class="row">
+      <button type="button" class="alt" id="insp-storage">View storage</button>
+      <button type="button" class="alt" id="insp-fields">View form fields</button>
+      <button type="button" class="alt" id="insp-request">View request</button>
+    </div>
+    <pre id="insp-out">Choose a tab above.</pre>
+    <div class="row" id="insp-edit-row" style="display:none">
+      <label for="insp-key" style="margin:0">Key</label><input type="text" id="insp-key" style="flex:0 1 160px" autocomplete="off">
+      <label for="insp-val" style="margin:0">New value</label><input type="text" id="insp-val" autocomplete="off">
+      <button type="button" id="insp-set">Set and resubmit</button>
+    </div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: read client-side storage (easy)</h3>
+    <p>Open the inspector&rsquo;s Storage tab. One stored value controls which price tier this browser is treated as. What is the value of that key?</p>
+    <div class="row"><label for="a1" style="margin:0">Stored value</label><input type="text" id="a1" autocomplete="off" spellcheck="false"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 2: override a hidden field (easy&ndash;medium)</h3>
+    <p>Open the Form fields tab to find the hidden unit price field, then use the inspector to set it to <code>0.01</code> and resubmit by pressing Buy now. What total does the simulated server now charge?</p>
+    <div class="row"><label for="a2" style="margin:0">Total charged</label><input type="text" id="a2" autocomplete="off" spellcheck="false"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 3: bypass a client-side limit (medium)</h3>
+    <p>The quantity box refuses to go below 1 in the page itself, but the inspector lets you edit the request directly. Set the request&rsquo;s quantity to <code>-5</code> and resubmit. What happens to the order total?</p>
+    <div class="row"><label for="a3" style="margin:0">What happens to the total</label><input type="text" id="a3" autocomplete="off" spellcheck="false"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Task 4: pick the fix (harder)</h3>
+    <p>Multiple choice: which change would actually stop both Task 2 and Task 3, rather than just hiding the fields better?</p>
+    <div class="row"><label for="a4" style="margin:0">Type: lookup or hide</label><input type="text" id="a4" autocomplete="off" spellcheck="false"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. In Task 1, what did reading client-side storage tell you about how much this page trusts the browser to remember on its own?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>The price tier was stored entirely client-side, meaning the page relies on the browser to say who it’s dealing with rather than confirming that from a source the server controls, such as the logged-in session.</p></details></div>
+  <div class="card"><label for="r2">2. In Task 2, why did editing a hidden field work? What does "hidden" actually mean in HTML?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>A hidden input is only hidden visually: hidden = "not displayed on the page", not "inaccessible" or "protected". It is still full, editable HTML sitting in the page source and still gets sent with the form exactly like a visible field.</p></details></div>
+  <div class="card"><label for="r3">3. In Task 3, a negative quantity produced a nonsensical total. What does that tell you about where the server should have checked the value?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>The server multiplied price by whatever quantity it received without checking it was a sensible, positive number. That check needed to happen server-side, regardless of whatever the page’s own input restrictions claimed to enforce.</p></details></div>
+  <div class="card"><label for="r4">4. Why doesn’t encrypting or obfuscating the hidden price field count as a real fix?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>It would make the value harder to read, but the user can still change it to a value they can’t read either, or the client-side code that encrypts it can be studied and reproduced. The real fix removes the need to trust the client with the price at all: look it up server-side from the product ID.</p></details></div>
+  <div class="card"><label for="r5">5. Name a real site feature, other than a checkout, where trusting the client could cause a problem, and describe the server-side check that would fix it.</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Examples: an admin-only delete button that’s merely hidden from normal users (fix: check the user’s role server-side on every request, not just whether the button is shown); a "free shipping over £50" rule applied in JavaScript (fix: recalculate shipping server-side from the real basket total).</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>Everything in the browser, including hidden fields and client-side storage, is visible and editable by the user.</li>
+    <li>Client-side validation is a convenience for honest users, not a security control.</li>
+    <li>Authority (price, role, permissions) must be looked up or re-checked server-side, never trusted from the client.</li>
+    <li>Hiding or obfuscating a value is not the same as removing the need to trust it.</li>
+    <li>The fix is almost always the same: the server recomputes or re-verifies anything that matters, regardless of what arrived in the request.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> Next up is <a href="csrf-forged-requests.html">CSRF: requests you never meant to send</a>, where a browser’s own habit of remembering you becomes the problem.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/client-side-trust.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>

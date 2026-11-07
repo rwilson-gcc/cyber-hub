@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secure coding: fixing injection flaws | Cyber security challenge</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/room.css">
+<link rel="stylesheet" href="../css/rooms/secure-coding-fixes.css">
+<link rel="stylesheet" href="../css/learner.css">
+</head>
+<body data-room="secure-coding-fixes">
+<a class="skip" href="#main">Skip to main content</a>
+<div class="brandbar">
+  <div class="wrap brandbar-inner">
+    <a class="brand-logo" href="../index.html"><img src="../img/gcc-logo.png" alt="Glasgow Clyde College: back to the Cyber Security Learning Hub" width="96" height="96"></a>
+    <div class="brandbar-right">
+      <a class="back-link" href="../index.html">Back to the hub</a>
+      <div class="learner-slot"></div>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Secure coding: fixing injection flaws</h1>
+    <p>You’ve found SQL injection, XSS, and command and path injection. This room asks you to fix them. Four short, fictional snippets, four decisions about what actually closes the hole rather than just hiding it.</p>
+  </div>
+  <div class="arc" aria-hidden="true"></div>
+</header>
+
+<nav aria-label="Page sections">
+  <ul>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#demo">Demonstration</a></li>
+    <li><a href="#challenge">Challenge</a></li>
+    <li><a href="#hints">Hints</a></li>
+    <li><a href="#flag">Flag</a></li>
+    <li><a href="#reflect">Reflection</a></li>
+    <li><a href="#export">Export</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main">
+
+<section id="intro" aria-labelledby="intro-h"><div class="wrap">
+  <h2 id="intro-h">Introduction</h2>
+  <p>Finding a vulnerability is only half the job. This room reviews four short, fictional code snippets, each with the kind of flaw you&rsquo;ve met in this path and in Path 1, and asks you to choose the fix that actually removes the cause rather than one that only looks safer.</p>
+  <h3>Why does it matter?</h3>
+  <p>Many real fixes make a vulnerability harder to trigger without closing it: a filter that blocks today&rsquo;s known payload, an error message that&rsquo;s merely harder to read. A developer who can tell a real fix from a cosmetic one writes code that stays secure as attackers keep trying new angles.</p>
+  <h3>Where does this happen in real life?</h3>
+  <p>Code review, whether by a colleague or an automated tool, is where these decisions get made every day. Getting it right here is practice for exactly that moment.</p>
+  <div class="card mint">
+    <h3 style="margin-top:0">An analogy</h3>
+    <p>Putting a sign on a broken step that says &ldquo;mind the gap&rdquo; is a cosmetic fix: it relies on everyone reading it, every time. Fixing the step is a real fix: it removes the hazard, not just the warning.</p>
+  </div>
+  <div class="card yellow">
+    <h3 style="margin-top:0">A note on the code</h3>
+    <p>Every snippet in this room is short, fictional pseudo-code written for teaching. None of it is real production code, and nothing here runs: you are reviewing it, not executing it.</p>
+  </div>
+</div></section>
+
+<section id="objectives" aria-labelledby="obj-h"><div class="wrap">
+  <h2 id="obj-h">Learning objectives</h2>
+  <ul class="tick">
+    <li>Recognise the real fix for SQL injection, XSS, path traversal and command injection.</li>
+    <li>Tell a root-cause fix apart from one that only hides the symptom.</li>
+    <li>Explain why validating on the server, not just the client, matters even when client-side checks exist.</li>
+    <li>Apply more than one fix to a snippet that combines two flaws, in a sensible order.</li>
+    <li>Describe defence in depth as a backup to the real fix, not a replacement for it.</li>
+  </ul>
+</div></section>
+
+<section id="theory" aria-labelledby="theory-h"><div class="wrap">
+  <h2 id="theory-h">Theory</h2>
+  <h3>Idea 1: symptom fixes vs cause fixes</h3>
+  <p>A symptom fix changes the attack that was tried without removing the underlying mistake. A cause fix removes the mistake, so the whole class of attack stops working, including variations nobody has tried yet.</p>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>Flaw</th><th>Symptom fix (weak)</th><th>Cause fix (real)</th></tr></thead>
+    <tbody>
+      <tr><td>SQL injection</td><td>Block the word SELECT</td><td>Parameterised queries</td></tr>
+      <tr><td>XSS</td><td>Strip the word &lt;script&gt;</td><td>Context-aware output encoding</td></tr>
+      <tr><td>Path traversal</td><td>Strip ../</td><td>Resolve and check the final path stays inside the allowed folder</td></tr>
+      <tr><td>Command injection</td><td>Strip ; and &amp;&amp;</td><td>Never build a shell string; call the function directly with arguments</td></tr>
+    </tbody>
+  </table></div>
+  <fieldset>
+    <legend>Mini quiz: spot the symptom fix</legend>
+    <p>A developer fixes a path traversal bug by replacing every ../ in the input with an empty string before using it. Is this a reliable fix?</p>
+    <label><input type="radio" name="q1" value="a"> No. ....// can collapse back into ../ once the inner copy is stripped</label>
+    <label><input type="radio" name="q1" value="b"> Yes. ../ can never appear again</label>
+    <label><input type="radio" name="q1" value="c"> Yes, as long as it also blocks semicolons</label>
+    <button type="button" class="alt" id="q1-btn">Check answer</button>
+    <div class="fb" id="q1-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 2: validate on the server, always</h3>
+  <p>Client-side checks (JavaScript, HTML <code>maxlength</code>, disabled buttons) are a convenience for honest users. They run entirely in the browser, which anyone can inspect and bypass by editing the request directly, as you did in earlier rooms. The server must repeat every check that matters, because the server is the only part of the system an attacker can’t directly control.</p>
+  <fieldset>
+    <legend>Mini quiz: where must validation happen?</legend>
+    <p>A form uses JavaScript to stop a quantity field going below 1. Is that enough?</p>
+    <label><input type="radio" name="q2" value="a"> No. The server must enforce the same rule, because the client can be bypassed</label>
+    <label><input type="radio" name="q2" value="b"> Yes, since users would see an error otherwise</label>
+    <label><input type="radio" name="q2" value="c"> Yes, because the field is disabled until valid</label>
+    <button type="button" class="alt" id="q2-btn">Check answer</button>
+    <div class="fb" id="q2-fb" role="status"></div>
+  </fieldset>
+
+  <h3>Idea 3: ordering fixes when a snippet has more than one flaw</h3>
+  <p>When a snippet combines two issues, fix the one that gives the most direct control first (usually injection into a command or query), then the next. Applying fixes in isolation without checking they still work together can reopen a gap, so re-read the whole snippet once both fixes are in place.</p>
+
+  <h3>Idea 4: defence in depth still matters</h3>
+  <p>None of this replaces the layers from earlier rooms: least privilege, HttpOnly cookies, a Content Security Policy, quiet error pages, logging and monitoring. They don&rsquo;t fix the flaw, but they shrink the damage if a fix is ever missed, and they are part of a mature secure coding practice.</p>
+</div></section>
+
+<section id="demo" aria-labelledby="demo-h"><div class="wrap">
+  <h2 id="demo-h">Demonstration</h2>
+  <p>Worked example. A fictional snippet from <code>fernhill-market.example</code> builds a query like this:</p>
+  <div class="card">
+    <pre>query = "SELECT * FROM products WHERE name LIKE '%" + search + "%'"
+run(query)</pre>
+    <p>A reviewer suggests two possible fixes:</p>
+    <pre>Fix A (symptom):  if "'" in search: search = search.replace("'", "")
+Fix B (cause):    run("SELECT * FROM products WHERE name LIKE ?", ["%" + search + "%"])</pre>
+    <p>Fix A only blocks the one character this attack happened to need; a payload using a different route around the filter, or no quote at all, could still work. Fix B separates the query from the data entirely, so <i>no</i> value the user supplies can ever change the structure of the query, whatever characters it contains. That&rsquo;s the real fix, and it&rsquo;s the one this room asks you to pick every time.</p>
+  </div>
+</div></section>
+
+<section id="challenge" aria-labelledby="ch-h"><div class="wrap">
+  <h2 id="ch-h">Challenge</h2>
+  <p>Four short snippets below, each with a flaw from this path or Path 1. For each one, choose the fix that actually removes the cause. Your choices are checked against what a careful reviewer would pick, and the simulator shows what the chosen fix stops.</p>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Task 1: SQL injection</h3>
+    <pre>query = "SELECT * FROM staff WHERE username = '" + user + "' AND password = '" + pass + "'"
+run(query)</pre>
+    <fieldset>
+      <legend>Choose the fix</legend>
+      <label><input type="radio" name="t1" value="a"> Escape every single quote character in user and pass before building the string</label>
+      <label><input type="radio" name="t1" value="b"> Use a parameterised query: run("...WHERE username = ? AND password = ?", [user, pass])</label>
+      <label><input type="radio" name="t1" value="c"> Reject any input longer than 20 characters</label>
+    </fieldset>
+    <div class="row"><button type="button" data-task="1">Check answer</button></div>
+    <div class="fb" id="fb1" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 2: cross-site scripting</h3>
+    <pre>page.write("&lt;p&gt;Welcome back, " + displayName + "&lt;/p&gt;")</pre>
+    <fieldset>
+      <legend>Choose the fix</legend>
+      <label><input type="radio" name="t2" value="a"> Block displayName values containing the word script</label>
+      <label><input type="radio" name="t2" value="b"> HTML-encode displayName before writing it into the page</label>
+      <label><input type="radio" name="t2" value="c"> Limit displayName to 15 characters</label>
+    </fieldset>
+    <div class="row"><button type="button" data-task="2">Check answer</button></div>
+    <div class="fb" id="fb2" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 3: path traversal</h3>
+    <pre>path = "/var/www/uploads/" + filename
+send_file(path)</pre>
+    <fieldset>
+      <legend>Choose the fix</legend>
+      <label><input type="radio" name="t3" value="a"> Remove any ../ found in filename before building the path</label>
+      <label><input type="radio" name="t3" value="b"> Resolve the final path, confirm it is still inside /var/www/uploads/, and reject it otherwise</label>
+      <label><input type="radio" name="t3" value="c"> Only allow filenames that don’t contain spaces</label>
+    </fieldset>
+    <div class="row"><button type="button" data-task="3">Check answer</button></div>
+    <div class="fb" id="fb3" role="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Task 4: a snippet with two flaws (harder)</h3>
+    <p>This one combines command injection and a missing server-side check. It only runs the convert tool if quantity is a positive number &mdash; but that check happens in the browser, not here:</p>
+    <pre>// server, receives: filename, quantity (already checked positive by client-side JS)
+cmd = "convert " + filename + " --copies=" + quantity
+run_in_shell(cmd)</pre>
+    <fieldset>
+      <legend>Choose both fixes that are needed here</legend>
+      <label><input type="checkbox" id="t4a" value="shell"> Call the convert function directly with filename and quantity as separate arguments, never through a shell string</label>
+      <label><input type="checkbox" id="t4b" value="clientonly"> Nothing else is needed: the client-side check on quantity already handles that part</label>
+      <label><input type="checkbox" id="t4c" value="server"> Re-check that quantity is a positive number on the server too, since the client-side check can be bypassed</label>
+    </fieldset>
+    <div class="row"><button type="button" data-task="4">Check answer</button></div>
+    <div class="fb" id="fb4" role="status"></div>
+  </div>
+
+  <div class="card" aria-label="Progress">
+    <p class="status-line" id="prog-text">Progress: 0 of 4 tasks complete</p>
+    <div class="bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-labelledby="prog-text"><div id="bar"></div></div>
+  </div>
+</div></section>
+
+<section id="hints" aria-labelledby="hint-h"><div class="wrap">
+  <h2 id="hint-h">Hints</h2>
+  <button type="button" class="alt" id="hint-btn">Show hint</button>
+  <div id="hint-list" aria-live="polite"></div>
+</div></section>
+
+<section id="flag" aria-labelledby="flag-h"><div class="wrap">
+  <h2 id="flag-h">Flag submission</h2>
+  <p>Submit the flag you found. Flags look like <code>FLAG{example_flag}</code>.</p>
+  <div class="row"><label for="flag-in" style="margin:0">Your flag</label><input type="text" id="flag-in" autocomplete="off" spellcheck="false" placeholder="FLAG{...}"><button type="button" id="flag-btn">Check flag</button></div>
+  <div class="fb" id="flag-fb" role="status"></div>
+</div></section>
+
+<section id="reflect" aria-labelledby="ref-h"><div class="wrap">
+  <h2 id="ref-h">Reflection questions</h2>
+  <div class="card"><label for="r1">1. For Task 1, why does a parameterised query stop every SQL injection attempt, not just ones using a quote mark?</label><textarea id="r1"></textarea>
+    <details><summary>Discussion points</summary><p>It separates the SQL structure from the data completely: the database treats user and pass purely as values, never as part of the instruction, no matter what characters they contain.</p></details></div>
+  <div class="card"><label for="r2">2. For Task 2, why is blocking the word "script" not reliable, even though it would stop the exact payload shown earlier in this path?</label><textarea id="r2"></textarea>
+    <details><summary>Discussion points</summary><p>There are many ways to run JavaScript without the literal word "script" appearing, such as event-handler attributes like onerror. A word blacklist only ever covers the specific patterns its author thought of.</p></details></div>
+  <div class="card"><label for="r3">3. For Task 3, what does "resolve the final path" mean, and why is it stronger than just removing ../ from the input?</label><textarea id="r3"></textarea>
+    <details><summary>Discussion points</summary><p>It means actually working out which real file or folder the path points to after all ../ segments are applied, then checking that location is still inside the folder the feature is meant to serve from. It catches every way of constructing a traversal, not just the literal string ../.</p></details></div>
+  <div class="card"><label for="r4">4. For Task 4, why did the snippet need two separate fixes rather than one?</label><textarea id="r4"></textarea>
+    <details><summary>Discussion points</summary><p>It had two independent flaws: building a shell command from user input (fixed by calling the function directly with arguments) and trusting a check that only ran in the browser (fixed by repeating that check on the server). Fixing one would have left the other wide open.</p></details></div>
+  <div class="card"><label for="r5">5. Across all four tasks, what one habit would have caught each flaw during a code review, before it ever reached users?</label><textarea id="r5"></textarea>
+    <details><summary>Discussion points</summary><p>Asking, for every place user input is used: "is this treated purely as data everywhere it ends up, and is every security-relevant check repeated on the server?" That single question covers injection, XSS, traversal and client-side-only validation alike.</p></details></div>
+</div></section>
+
+<section id="export" aria-labelledby="exp-h"><div class="wrap">
+  <h2 id="exp-h">Export your results</h2>
+  <p>Generate a summary of your task answers, quiz result, reflections and flag status to upload as evidence on Canvas. The file is built and downloaded entirely in your browser. Your name and student ID stay on this device; only your answers and progress are saved to your learner ID.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 200px"><label for="exp-name">Name</label><input type="text" id="exp-name" autocomplete="off"></div>
+      <div style="flex:1 1 200px"><label for="exp-id">Student ID (optional)</label><input type="text" id="exp-id" autocomplete="off"></div>
+    </div>
+    <p style="margin-top:.8rem"><button type="button" class="alt" id="export-btn">Download evidence file</button></p>
+    <div class="fb" id="export-fb" role="status"></div>
+  </div>
+</div></section>
+
+<section id="takeaways" aria-labelledby="take-h" style="border-bottom:0"><div class="wrap">
+  <h2 id="take-h">Key takeaways</h2>
+  <ul class="tick">
+    <li>A cause fix removes the flaw; a symptom fix only blocks the specific attack already tried.</li>
+    <li>Parameterised queries, output encoding, and path or command safety follow the same principle: keep data as data.</li>
+    <li>Client-side checks are a convenience, never a security control. The server must repeat them.</li>
+    <li>A snippet can combine more than one flaw, and each needs its own fix.</li>
+    <li>Defence in depth (least privilege, quiet errors, logging) backs up real fixes; it doesn’t replace them.</li>
+  </ul>
+  <div class="card yellow"><p style="margin:0"><b>What next?</b> That completes Path 3: injection and input validation. Path 4 starts with <a href="client-side-trust.html">Client-side trust: storage and validation bypass</a>. Head back to the <a href="../index.html">hub</a> to tick this room off and continue your path.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><p>©2026 GLASGOW CLYDE COLLEGE</p><p>CYBER SECURITY LEARNING ROOM</p><p class="lcs"><img src="../img/life-changing-stuff.png" alt="#LifeChangingStuff" width="150" height="84"></p></div></footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/learner.js"></script>
+<script src="../js/rooms/secure-coding-fixes.js"></script>
+<script src="../js/room-progress.js"></script>
+</body>
+</html>
